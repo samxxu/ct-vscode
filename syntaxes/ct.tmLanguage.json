@@ -14,6 +14,7 @@
     { "include": "#ct-generic-decl" },
     { "include": "#ct-generic-call" },
     { "include": "#ct-generic-static-call" },
+    { "include": "#ct-box-alias-removed" },
     { "include": "#ct-box-type" },
     { "include": "#ct-generic-type" },
     { "include": "#ct-ref" },
@@ -528,8 +529,12 @@
         "1": { "name": "keyword.other.new.ct" }
       }
     },
+    "ct-box-alias-removed": {
+      "match": "\\bbox\\b(?=[ \\t]*<)",
+      "name": "invalid.deprecated.ct"
+    },
     "ct-box-type": {
-      "match": "\\b(?:Box|box)\\b(?=[ \\t]*<)",
+      "match": "\\bBox\\b(?=[ \\t]*<)",
       "name": "storage.type.box.ct"
     },
     "ct-owned-type": {

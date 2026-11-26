@@ -149,7 +149,7 @@
       "Box<${1:Record}> ${2:r} = new ${1:Record} { .${3:field} = ${4:value} };",
       "$0"
     ],
-    "description": "Single-object owning handle; `new` is move construction (canonical `Box<T>`; `box<T>` is the deprecated alias)"
+    "description": "Single-object owning handle; `new` is move construction. `Box<T>` is the only spelling in Ct 1.1 — the lower-case alias was removed."
   },
   "String (owning)": {
     "prefix": "String",

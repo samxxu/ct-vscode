@@ -1139,6 +1139,10 @@ def main():
     check("bare `Box` / `box` identifiers hit neither box rule",
           "ct-box-type" not in by_line[1]
           and "ct-box-alias-removed" not in by_line[1], str(by_line[1]))
+    with open(os.path.join(EXT, "snippets", "ct.json")) as fh:
+        snippets_text = fh.read()
+    check("snippets spell `Box<` only (the `box<` alias is gone)",
+          "box<" not in snippets_text)
 
     print()
     print("synthetic match arm -- the variant keeps the ADT scopes:")
