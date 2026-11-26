@@ -20,6 +20,9 @@
   - Line-level approximations are documented in the README: block-bodied value
     arms keep `ct-closure-arrow`, and `yield` is recognised at statement start
     only.
+- VS Code language display name: the first language alias is now `Ct` (it was
+  `CT`), so the language selector / status bar reads **Ct — C with Traits**,
+  matching the extension name. `CT` and `ct` remain accepted aliases.
 - Anti-drift gate: `test/surface.json` + `test/check-surface.py` (51 entries in
   four groups: top-level / keywords / control / types) assert that every
   CT-only construct still has a rule and a fixture hit. `npm test` now runs
