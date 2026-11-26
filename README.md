@@ -222,12 +222,13 @@ once before publishing.
 npm ci
 npm test
 npm run package                 # -> ct-vscode-0.2.0.vsix
-npm run publish                 # needs a Marketplace publisher + VSCE_PAT
+npm run publish                 # local publish needs a Marketplace PAT; CI uses OIDC
 ```
 
 CI ([ci.yml](.github/workflows/ci.yml)) builds the `.vsix` on every push and
 pull request and uploads it as an artifact. [release.yml](.github/workflows/release.yml)
-publishes on a `v*` tag using the `VSCE_PAT` repository secret.
+publishes on a `v*` tag with **Trusted Publishing (GitHub OIDC)** — no PAT
+secret is involved.
 
 Two things are needed before publishing:
 
@@ -282,4 +283,4 @@ for details.
   `indexer.js`（纯行扫描器，可被 Node 直接断言），**无构建、无运行时依赖**，可直接
   `npm run package` 打包；测试用 `npm test`，样例都在 `test/fixtures/`，不依赖其它仓库。
 - 发布前需要补两样：`package.json` 里的 `publisher` 改成你真实的 Marketplace 发布者 ID，以及自备一张 128×128 的 `icon.png`；
-  GitHub Actions 需要配置 `VSCE_PAT` secret（tag `v*` 触发 [release.yml](.github/workflows/release.yml)）。
+  GitHub Actions 发布走 **Trusted Publishing（OIDC）**，无需 PAT secret（tag `v*` 触发 [release.yml](.github/workflows/release.yml)）。

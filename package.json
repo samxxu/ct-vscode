@@ -46,7 +46,7 @@
     "publish": "vsce publish"
   },
   "devDependencies": {
-    "@vscode/vsce": "^3"
+    "@vscode/vsce": "^4"
   },
   "contributes": {
     "languages": [

@@ -34,6 +34,8 @@
   `p81_box/layout.ct`). `test/fixtures/README.md` records the tag, commit, file
   list and count; the surface gate checks that record against the files on disk.
 - `test/check-grammar.py`: 220 checks, up from 182 at 0.6.1.
+- Release: the `v*` Release workflow publishes with **Trusted Publishing
+  (GitHub OIDC)** via `npx @vscode/vsce publish --oidc`; no PAT secret is used. `@vscode/vsce` is now 4.x and both workflows run on Node 22.
 - Version line: the Marketplace line is **0.0.1 → 0.1.0 → 0.2.0**. The `0.6.x`
   entries below are the pre-split extension line and were never published; as
   before, the extension version is independent of `CTC_VERSION`.

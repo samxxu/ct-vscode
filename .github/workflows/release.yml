@@ -5,6 +5,13 @@ on:
     tags:
       - 'v*'
 
+# Trusted Publishing (GitHub OIDC): the Marketplace publisher policy accepts
+# this repository + this workflow file, so no PAT secret is involved. Do not
+# add a PAT env back — the global Azure DevOps PATs retire on 2026-12-01.
+permissions:
+  contents: read
+  id-token: write
+
 jobs:
   publish:
     runs-on: ubuntu-latest
@@ -13,7 +20,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - name: Install dependencies
@@ -23,7 +30,7 @@ jobs:
         run: npm test
 
       - name: Package extension
-        run: npx vsce package -o ct-vscode.vsix
+        run: npx @vscode/vsce package -o ct-vscode.vsix
 
       - name: Upload vsix
         uses: actions/upload-artifact@v4
@@ -32,7 +39,5 @@ jobs:
           path: ct-vscode.vsix
           if-no-files-found: error
 
-      - name: Publish to Visual Studio Marketplace
-        run: npx vsce publish --packagePath ct-vscode.vsix
-        env:
-          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+      - name: Publish to Visual Studio Marketplace (Trusted Publishing / OIDC)
+        run: npx @vscode/vsce publish --oidc --packagePath ct-vscode.vsix

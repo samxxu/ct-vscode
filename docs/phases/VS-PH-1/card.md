@@ -5,10 +5,10 @@ extension-minor: 2
 
 # VS-PH-1 — 语法对齐 Ct 1.1.0（单卡多 stage）
 
-> **状态：进行中**。目标扩展版本 **`0.2.0`**；本卡一次做完，卡内 S0–S6 串行。
+> **状态：S0–S5 已完成，S6 只剩「CI 切 OIDC + 收口」**。目标扩展版本 **`0.2.0`**；本卡一次做完，卡内 S0–S6 串行。
 > **进度**：S0–S5 已完成（S1a `f7c91e2`、S0+S1b `16c8977`、S2 `d3a17ad`、
-> S3 `2d1a7e5`、S4 `666788a`、S5 `9b84b73`）；S6 收口进行中（0.2.0 文档、打包、
-> 提交与 tag）。
+> S3 `2d1a7e5`、S4 `666788a`、S5 `9b84b73`）；S6a（0.2.0 四处版本、README/CHANGELOG、
+> 打包、证据）已完成；**S6b 待办见 §6 执笔人交接清单**（CI 切 OIDC → 打 tag → 推送）。
 > **上游依据**：`ct-lang` tag `v1.1.0`（`aa223cf18e3ac143d066330569e537b8899ebbea`），
 > `docs/language-spec.md` §3 / §3.1、§4.65、§4.71、§4.73。
 > **覆盖缺口**：G-1 表达式 match 臂、G-2 `yield`、G-3 可选链、G-4 `box` 硬错、G-5 固有 impl 锁测、
@@ -24,7 +24,7 @@ extension-minor: 2
 | 非目标 | 304–307 模式与 §4.77 函子糖（1.2，未发布）；语义校验（`yield` 唯一出口、`box` 硬错判定由编译器负责）；`indexer.js` / `extension.js` 功能；发布渠道与账号迁移 |
 | 交付物 | `syntaxes/ct.tmLanguage.json`、`test/fixtures/**`（按 `v1.1.0` 重取 + 新增样例）、`test/surface.json`、`test/check-surface.py`、`check-grammar.py` 断言、README/CHANGELOG、`0.2.0` vsix、`v0.2.0` tag |
 | Stage 清单 | S0 语料与基线、S1 红、S2 match/yield、S3 可选链、S4 `box`、S5 语料与门禁、S6 收口（§2） |
-| 退出判据 | `E-VS-1-01 … E-VS-1-18`（§3） |
+| 退出判据 | `E-VS-1-01 … E-VS-1-19`（§3） |
 | version-minor | 2 |
 | 已知风险 | `R-VS-1-1 … R-VS-1-6`（§5） |
 
@@ -36,7 +36,7 @@ extension-minor: 2
 | 基线门禁 | 基线 `ede274b` 时 `npm test` 为 182 检查；S1 红提交后为 196 检查（新增 14 条） | 已核对 |
 | 规范歧义 | 行式语法无法判定「`yield` 是否在 match 臂块内」，采用**行首近似**并登记（R-VS-1-1） | 已裁定 |
 | **版本口径** | Marketplace 已发布 **0.1.0**（用户确认；gallery API 目前仍只列 0.0.1），**0.1.0 不可复用**，本卡目标改为 **0.2.0**；`0.6.x` 是拆分前的扩展线，从未上架。四处置数：`package.json` → `package-lock.json` 根 `version` → README → CHANGELOG | 已裁定（2026-11-27） |
-| **发布凭据** | 收口要推 `v*` tag，会触发 `Release` 工作流（`vsce publish`）。**打 tag 前必须确认凭据可用**：`VSCE_PAT` secret 已存在，或工作流已改为 Trusted Publishing（OIDC） | **未完成，收口前必须补齐** |
+| **发布凭据** | **裁定：走 Trusted Publishing（GitHub OIDC），不使用 `VSCE_PAT`**。Azure DevOps 全局 PAT 于 **2026-12-01 退役**，PAT 路线作废。策略字段：Repository owner `samxxu`、Repository `ct-vscode`、Workflow `release.yml`、Environment 留空 | 策略：用户 2026-11-27 已建（以首次 Release 成功为准）；CI：**待切 `--oidc`** |
 | 红线 | 已推的 tag 不删、不强推、不改写历史；发布步骤失败只允许修凭据后 `gh run rerun` | 长期有效 |
 
 ## 2 Stage
@@ -49,7 +49,7 @@ extension-minor: 2
 | S3 | 可选链 `?.` / `?[` | `ct-optional-chain`（`\?\.(?![0-9])` 与 `\?\[`），排在 `ct-try` 之前 | E-VS-1-06…08 转绿 | M |
 | S4 | `box<T>` 退场 | `ct-box-type` 收窄为 `\bBox\b`；新增 `ct-box-alias-removed` → `invalid.deprecated.ct`；snippets 正文核对不含 `box<` | E-VS-1-09…10 转绿 | S |
 | S5 | 语料与防漂移门禁 | `test/surface.json`（四组构造清单）+ `test/check-surface.py`（复用 `check-grammar` 的 `resolve/scan`）；`npm test` 串联三脚本；G-5/G-6 锁测 | E-VS-1-11…14、17…18；门禁演练按 E-VS-1-13 | M |
-| S6 | 收口 | README（目标 1.1.0、构造表补 1.1 三行）、`.vscodeignore` 加 `docs/**`、CHANGELOG `0.2.0`（顶部加版本线说明：`0.6.x` 为拆分前线，市场线 `0.0.1 → 0.1.0 → 0.2.0`）、`package.json` 版本 `0.2.0` 并 `npm install --package-lock-only` 重生成 lock、打包、**提交 + tag + push** | E-VS-1-15…16；Actions 记录贴入 | M |
+| S6 | 收口 | **S6a（已完成）**：README 目标 1.1.0、`.vscodeignore` 加 `docs/**`、CHANGELOG `0.2.0`、`package.json` 0.2.0 与 lock、打包、证据表。**S6b（待办）**：CI 切 OIDC（§6 清单 1–3）→ 提交 → annotated tag `v0.2.0` → push main+tag | E-VS-1-15…16、19；Actions 记录贴入 | M |
 
 **Stage 顺序约束**：S0 → S1（必须真红）→ S2/S3/S4（可自选顺序，各自转绿）→ S5 → S6。
 S2–S4 期间不得修改 S1 已提交的断言（断言变更只能回到 S1 重做并重新贴红）。
@@ -64,7 +64,7 @@ S2–S4 期间不得修改 S1 已提交的断言（断言变更只能回到 S1 �
 | S3 可选链 | ✅ 已提交 | `2d1a7e5`：`ct-optional-chain`；断言转绿，剩 box 3 条 |
 | S4 `box` 退场 | ✅ 已提交 | `666788a`：`ct-box-type` 收窄 + `ct-box-alias-removed`，snippets 去掉 `box<`；`215 checks, 0 failed` |
 | S5 语料 + 防漂移门禁 | ✅ 已提交 | `9b84b73`：`test/surface.json`（51 条 / 4 组）+ `test/check-surface.py`（110 检查）+ G-5/G-6 锁测；`7fe31b5` 修 `__pycache__` |
-| S6 收口（提交/tag/push） | 进行中 | 0.2.0 四处版本、README/CHANGELOG、打包与 tag 见下 |
+| S6 收口 | **S6a ✅ / S6b ⏳** | S6a `837931a`：0.2.0 四处版本、README/CHANGELOG/`.vscodeignore`、打包与证据表。S6b 未做：CI 仍为 `VSCE_PAT` + Node 20 + vsce `^3` |
 
 ### S6 验证记录（0.2.0，提交 `837931a`）
 
@@ -79,7 +79,7 @@ S2–S4 期间不得修改 S1 已提交的断言（断言变更只能回到 S1 �
 | 语言显示名 | ✅ 扩展 `displayName` 与 `aliases[0]` 均为 **Ct**；vsixmanifest `DisplayName` = `Ct — C with Traits`，编辑器语言显示名随 `aliases[0]` 变成 Ct（`CT` / `ct` 仍是别名） |
 | 真引擎交叉验证 | ✅ Oniguruma（VS Code 的 TextMate 引擎）下 74 条规则全部编译；54 份 fixtures 的 `(line, rule, text)` 命中与 `check-grammar.py` 的 Python 代理逐条一致（一次性验证，不在仓库门禁内） |
 | Marketplace | ✅ gallery API 当前列 `0.0.1`，用户确认 `0.1.0` 已发布；`0.2.0` 未占用 |
-| tag + Release | ⏳ 等待 `VSCE_PAT`：`gh api repos/samxxu/ct-vscode/actions/secrets` 为 `total_count: 0`；按发布闸未打 tag |
+| tag + Release | ⏳ 改走 **Trusted Publishing（OIDC）**，不依赖 `VSCE_PAT`：publisher 策略待用户建立（字段见 §4 第 0 步），`release.yml` 待切 `--oidc`；未打 tag |
 
 ## 3 退出判据（二值）
 
@@ -103,17 +103,22 @@ S2–S4 期间不得修改 S1 已提交的断言（断言变更只能回到 S1 �
 | E-VS-1-16 | **收口三连**：提交（含 `VS-PH-1` 标识）→ annotated tag `v0.2.0` → `git push origin main` 与 `git push origin v0.2.0` 均成功；CI 与 Release 的 run 链接与结论入库。**版本一致性**：`package.json`、`package-lock.json` 根 `version`、README、CHANGELOG 四处均为 `0.2.0`，且 `v0.2.0` 不与已发布版本冲突（0.1.0 已占用） |
 | E-VS-1-17 | **G-5 锁测**：`impl Cell {` 头部类型名有 `entity.name.type` scope；`impl Greeter for Person {` 仍命中 `ct-impl` |
 | E-VS-1-18 | **多级链不误判**：`doc["user"]["age"]`、`x[k].field` 不命中 `ct-generic-type` / `ct-generic-call` |
+| E-VS-1-19 | **OIDC 发布闭环**：`release.yml` 使用 `permissions: id-token: write` + `npx @vscode/vsce publish --oidc`，仓内无 `VSCE_PAT` secret 也能发布成功；`verify-pat.yml` 与 README 中的 `VSCE_PAT` 说明已删除；`@vscode/vsce` ≥ 4、两个工作流 Node 22、lock 已重生成 |
 
-## 4 收口流程（S6 固定动作，按序执行）
+## 4 收口流程（S6b 固定动作，按序执行）
 
-1. `npm test` 全绿 → 贴原始输出（三个脚本的汇总行）。
-2. `npx vsce package` → 贴文件清单与大小。
-3. `git add -A && git commit -m "feat(grammar): VS-PH-1 语法对齐 Ct 1.1.0（match/yield、可选链、box 退场、语料门禁）"`
-4. `git tag -a v0.2.0 -m "ct-vscode 0.2.0 — grammar aligned with Ct 1.1.0"`
-5. `git push origin main && git push origin v0.2.0`
-6. 贴两条 Actions 结果：`CI`（push）与 `Release`（tag）。
-7. 若 `Release` 在 publish 步骤失败：修凭据（`VSCE_PAT` / OIDC 策略）后 `gh run rerun <id>`；
-   **不删除 tag、不强推、不改写历史**。
+0. **Trusted Publishing 策略**：用户已于 2026-11-27 建好（字段：Repository owner `samxxu`、
+   Repository `ct-vscode`、Workflow `release.yml`、Environment 空）。**不需要付费账号，也不需要 PAT。**
+   若首次 Release 报身份不匹配，先核对这三项是否逐字一致。
+1. **CI 切 OIDC**（§6 清单 1–3）→ 推 `main` → 等 `CI` 绿。
+2. `npm test` 全绿 → 贴原始输出（三个脚本的汇总行）。
+3. `npx vsce package` → 贴文件清单与大小。
+4. `git add -A && git commit -m "ci(release): VS-PH-1 发布切 Trusted Publishing（OIDC）"`
+5. `git tag -a v0.2.0 -m "ct-vscode 0.2.0 — grammar aligned with Ct 1.1.0"`
+6. `git push origin main && git push origin v0.2.0`
+7. 贴两条 Actions 结果：`CI`（push）与 `Release`（tag）。
+8. 若 `Release` 在 publish 步骤失败：修 OIDC 策略（仓库名 / owner / 工作流文件名必须与策略逐字一致，
+   触发者必须是 tag）后 `gh run rerun <id>`；**不删除 tag、不强推、不改写历史**。
 
 ## 5 风险与回滚
 
@@ -124,12 +129,31 @@ S2–S4 期间不得修改 S1 已提交的断言（断言变更只能回到 S1 �
 | R-VS-1-3 | 规则顺序错（match-arm / optional-chain 相对 closure-arrow / ct-try） | 顺序写死在 grammar 并在 `scan order` 输出核对；E-VS-1-01、E-VS-1-08 锁 |
 | R-VS-1-4 | 可选链误吃三目 `c?.5` | 规则要求 `.` 后非数字；E-VS-1-07 锁 |
 | R-VS-1-5 | 按 tag 重取 fixtures 导致既有断言文本/行号变化 | 逐文件 `diff` 记录；断言按内容与子串匹配，不绑行号 |
-| R-VS-1-6 | **tag 触发发布但凭据未配** → Release 红 | 打 tag 前过「发布凭据」闸；失败只 rerun，不删 tag |
+| R-VS-1-6 | **tag 触发发布但凭据不可用** → Release 红 | 已裁定改走 OIDC（PAT 于 2026-12-01 退役）。实施清单：① `release.yml` 加 `permissions: contents: read, id-token: write`，发布步改 `npx @vscode/vsce publish --oidc --packagePath ct-vscode.vsix`，删 `env.VSCE_PAT`；② `package.json` 的 `@vscode/vsce` 升 `^4`（`--oidc` 需要 4.x）并 `npm install --package-lock-only`；③ 两个工作流 Node 20 → **22**（vsce 4 要求 ≥ 22）；④ 删 `verify-pat.yml`；⑤ README 三处 `VSCE_PAT` 说明改为 OIDC。失败只 rerun，不删 tag |
 
 回滚：语法、测试与门禁、文档三笔独立提交，可分别 revert；`v0.2.0` 版本号与 tag 若已推送则不删，
 以新 PATCH（0.2.1）修正。
 
-## 6 关联
+## 6 执笔人交接清单（S6b，剩余全部工作）
+
+> 主张人（需求/规划）已把决策、口径与判据全部落入本卡；以下由执笔人执行，完成后回填 §2 进度台账与 §2.1 证据表。
+
+| # | 工作 | 落点文件 | 完成判据 |
+| --- | --- | --- | --- |
+| 1 | 发布步切 OIDC | `.github/workflows/release.yml` | 工作流级 `permissions: { contents: read, id-token: write }`；发布步 `npx @vscode/vsce publish --oidc --packagePath ct-vscode.vsix`；不再引用 `secrets.VSCE_PAT` |
+| 2 | 升 vsce 与 Node | `package.json`、`package-lock.json`、`.github/workflows/ci.yml`、`.github/workflows/release.yml` | `@vscode/vsce: ^4`；两个工作流 `node-version: 22`；`npm ci` 后用 `--package-lock-only` 重生成的 lock；CI 全绿（E-VS-1-14） |
+| 3 | 清 PAT 残留 | `.github/workflows/verify-pat.yml`、`README.md` | 删除 `verify-pat.yml`；README 三处 `VSCE_PAT` 说明改为 OIDC；`grep -rn "VSCE_PAT" .`（排除 `docs/`）为空 |
+| 4 | 收口动作 | git | 提交 → annotated tag `v0.2.0` → push `main` + tag；`CI` 与 `Release` 双绿，run 链接与 Marketplace 0.2.0 可见性回填 §2.1 |
+| 5 | 回填证据 | 本卡 §2.1、`CHANGELOG.md`（如需） | E-VS-1-16、E-VS-1-19 标 ✅ 并附链接；`v0.2.0` 不与 0.1.0 冲突 |
+
+**边界与禁令**
+
+- 不动已推送的 tag、不强推、不改写历史；`Release` 失败只 `gh run rerun`。
+- 不改已绿的语法断言（要改必须回到「先红」并重新贴失败输出）。
+- 不引入运行时依赖；不提交 `node_modules/`、`*.vsix`、任何 secret。
+- 扩展功能逻辑（`indexer.js` / `extension.js`）不在本卡范围。
+
+## 7 关联
 
 - 规范：`ct-lang` `docs/language-spec.md` §3（行 231–257）、§3.1（行 259–281）、§4.65（行 2961）、§4.71（行 3183）、§4.73（行 3249–3460）
 - 样例：`ct-lang` `test/ast/302_adt_match_expr`、`errors/l29b5_yield_outside.ct`、`errors/l29b5_multi_yield.ct`、`test/ast/p53_{chain,ptr_field,field_ptr,map_ptr_sub,ptr_sub,ternary_dot5}`、`test/ast/300_adt_payload_glue`、`301_adt_methods`、`303_map_binding`
