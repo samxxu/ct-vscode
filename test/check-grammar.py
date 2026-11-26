@@ -76,6 +76,26 @@ CT_CASES = (
     # outside an arm, where the compiler rejects it.
     "test/ast/errors/l29b5_yield_outside.ct",
     "test/ast/errors/l29b5_multi_yield.ct",
+    # v1.1 corpus: inherent `impl Cell { … }` and the multi-level subscript
+    # chain (`c[index()].twice()`, `make_slot(5).at.x`), plus the map-binding
+    # conversion sites (`node` -> `struct Num`, `node.as<Num>()`).
+    "test/ast/301_adt_methods/prog.ct",
+    "test/ast/303_map_binding/prog.ct",
+    # Phase 53 optional chain: `p?.f`, `p?[i]`, the chained map lookup and the
+    # `c?.5 : 1.0` conditional look-alike.
+    "test/ast/p53_ptr_field/prog.ct",
+    "test/ast/p53_field_ptr/prog.ct",
+    "test/ast/p53_chain/prog.ct",
+    "test/ast/p53_map_ptr_sub/prog.ct",
+    "test/ast/p53_ptr_sub/prog.ct",
+    "test/ast/p53_ternary_dot5/prog.ct",
+    # Corpus needed by the syntax-surface gate (S5): `defer` / `errdefer` /
+    # `err:` / postfix `?`, `String` / `Str`, `ref` / `out` / `T[]`, and
+    # `Box<T>` / `new`.
+    "test/ast/236_result_try_defer/prog.ct",
+    "test/ast/231_str_ops/prog.ct",
+    "test/ast/p80_retain/borrow_out_ref.ct",
+    "test/ast/p81_box/layout.ct",
     # Phase 22/23 `loop`: the keyword only exists in statement position.
     "test/ast/100_loop_contextual_label/prog.ct",
     "test/ast/102_loop_range_basic/prog.ct",
@@ -279,10 +299,23 @@ MAP = "\n".join([
     "    write(buf, len) -> uart_put;",
     "    dog_get()->hi();",
 ])
-# LANG-24 Stage A: `Box` is the canonical spelling, `box` stays a deprecated
+# LANG-24 Stage A: `Box` is the canonical spelling; `box` stays a deprecated
 # alias; a bare `Box box;` / `int box;` / `r.box` is ordinary code.
 BOX_ALIAS = "box<Record> r = new Record { 7, \"x\" };"
+BOX_CANONICAL = "Box<Record> h = new Record { 7, \"x\" };"
 BOX_BARE = "struct Box { int box; } int main(void) { Box box = { 1 }; return box.box; }"
+
+# Phase 53 optional chain: `?.` / `?[` only, never the conditional operator
+# (`c?.5 : 1.0` is `c ? .5 : 1.0`) and never the statement-tail error return.
+OPTIONAL = "\n".join([
+    '    full = m["a"]?.c?.v;',
+    '    hit = mp?["k"];',
+    "    d = c?.5 : 1.0;",
+    "    int x = a ? b : c;",
+    "    n = g()?;",
+    '    char *s = "a?.b";',
+    "// a?.b",
+])
 
 # New tokens inside a string / comment are not code, exactly like `$` above.
 QUOTED = "\n".join([
@@ -306,7 +339,8 @@ NEW_RULES = {
     "ct-foreach-entry", "ct-container-method",
     "ct-ref", "ct-out", "ct-new", "ct-box-type", "ct-owned-type",
     "ct-adt-match", "ct-adt-construct", "ct-slice-type", "ct-try",
-    "ct-materialize", "ct-match-arm", "ct-yield",
+    "ct-materialize", "ct-match-arm", "ct-yield", "ct-optional-chain",
+    "ct-box-alias-removed",
 }
 
 
@@ -554,6 +588,27 @@ def main():
             check("arm-less `yield 1;` is still ct-yield (R-VS-1-1)",
                   any(h[0] == "ct-yield" for _, l, hs in rows
                       if "yield 1;" in l for h in hs))
+        if "p53_chain" in rel:
+            chain = [h for _, l, hs in rows if 'full = m["a"]?.c?.v;' in l for h in hs]
+            check('`m["a"]?.c?.v` -> ct-optional-chain twice',
+                  len([h for h in chain if h[0] == "ct-optional-chain"]) == 2,
+                  str(chain))
+        if "p53_map_ptr_sub" in rel:
+            check('`mp?["k"]` -> ct-optional-chain',
+                  any(h[0] == "ct-optional-chain" for _, l, hs in rows
+                      if 'hit = mp?["k"];' in l for h in hs))
+        if "p53_ptr_sub" in rel:
+            check("`p?[1]` -> ct-optional-chain",
+                  any(h[0] == "ct-optional-chain" for _, l, hs in rows
+                      if "p?[1]" in l for h in hs))
+        if "p53_ptr_field" in rel:
+            check("`p?.b` -> ct-optional-chain",
+                  any(h[0] == "ct-optional-chain" for _, l, hs in rows
+                      if "p?.b" in l for h in hs))
+        if "p53_ternary_dot5" in rel:
+            check("`c?.5 : 1.0` is not ct-optional-chain",
+                  not any(h[0] == "ct-optional-chain" for _, l, hs in rows
+                          if "c?.5 : 1.0" in l for h in hs))
         if "100_loop_contextual_label" in rel:
             check("statement `loop(2)` -> ct-loop",
                   any(h[0] == "ct-loop" for _, l, hs in rows
@@ -919,6 +974,28 @@ def main():
     check("`yield` inside a comment stays a comment", "ct-yield" not in by_line[7], str(by_line[7]))
 
     print()
+    print("synthetic optional chain -- `?.` / `?[` vs conditional and tail `?`:")
+    rows = scan(OPTIONAL, rules)
+    by_line = {n: [h[0] for h in hs] for n, _, hs in rows}
+    for n, line, hits in rows:
+        print("    %3d: %-22s %s" % (n, ", ".join(h[0] for h in hits), line.strip()))
+    check("`m[\"a\"]?.c?.v` -> ct-optional-chain twice",
+          by_line[1].count("ct-optional-chain") == 2, str(by_line[1]))
+    check('`mp?["k"]` -> ct-optional-chain',
+          by_line[2].count("ct-optional-chain") == 1, str(by_line[2]))
+    check("`c?.5 : 1.0` is not ct-optional-chain",
+          "ct-optional-chain" not in by_line[3], str(by_line[3]))
+    check("`a ? b : c` is not ct-optional-chain",
+          "ct-optional-chain" not in by_line[4], str(by_line[4]))
+    check("`g()?;` is still ct-try, not ct-optional-chain",
+          "ct-try" in by_line[5] and "ct-optional-chain" not in by_line[5],
+          str(by_line[5]))
+    check("`?.` inside a string stays a string",
+          "ct-optional-chain" not in by_line[6], str(by_line[6]))
+    check("`?.` inside a comment stays a comment",
+          "ct-optional-chain" not in by_line[7], str(by_line[7]))
+
+    print()
     print("synthetic type alias -- contextual and line-anchored:")
     rows = scan(ALIAS, rules)
     by_line = {n: [h[0] for h in hs] for n, _, hs in rows}
@@ -1036,19 +1113,32 @@ def main():
           "ct-materialize" in by_line[13] and "ct-range-index" not in by_line[13],
           str(by_line[13]))
     print()
-    print("synthetic LANG-24 alias and bare-identifier forms:")
+    print("synthetic box alias removal -- `Box<T>` is the only spelling in 1.1:")
     rows = scan(BOX_ALIAS, rules)
     by_line = {n: [h[0] for h in hs] for n, _, hs in rows}
     for n, line, hits in rows:
         print("    %3d: %-22s %s" % (n, ", ".join(h[0] for h in hits), line.strip()))
-    check("`box<T>` alias still -> ct-box-type",
+    check("`box<T>` -> ct-box-alias-removed",
+          "ct-box-alias-removed" in by_line[1], str(by_line[1]))
+    check("`box<T>` is not ct-box-type", "ct-box-type" not in by_line[1], str(by_line[1]))
+    alias_rule = dict(rules).get("ct-box-alias-removed") or {}
+    check("`ct-box-alias-removed` is scoped invalid.deprecated.ct",
+          alias_rule.get("name") == "invalid.deprecated.ct", str(alias_rule))
+    rows = scan(BOX_CANONICAL, rules)
+    by_line = {n: [h[0] for h in hs] for n, _, hs in rows}
+    for n, line, hits in rows:
+        print("    %3d: %-22s %s" % (n, ", ".join(h[0] for h in hits), line.strip()))
+    check("`Box<Record>` still -> ct-box-type",
           "ct-box-type" in by_line[1], str(by_line[1]))
+    check("`Box<Record>` is not ct-box-alias-removed",
+          "ct-box-alias-removed" not in by_line[1], str(by_line[1]))
     rows = scan(BOX_BARE, rules)
     by_line = {n: [h[0] for h in hs] for n, _, hs in rows}
     for n, line, hits in rows:
         print("    %3d: %-22s %s" % (n, ", ".join(h[0] for h in hits), line.strip()))
-    check("bare `Box` / `box` identifiers are not ct-box-type",
-          "ct-box-type" not in by_line[1], str(by_line[1]))
+    check("bare `Box` / `box` identifiers hit neither box rule",
+          "ct-box-type" not in by_line[1]
+          and "ct-box-alias-removed" not in by_line[1], str(by_line[1]))
 
     print()
     print("synthetic match arm -- the variant keeps the ADT scopes:")

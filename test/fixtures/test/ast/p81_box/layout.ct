@@ -1,0 +1,25 @@
+/* PH-81 E81-1 / P-7.5-1: the `Box<T>` handle is two machine words and the
+ * shared `{refs, aux}` header is 8 bytes immediately before the payload. The
+ * assertions are emitted into the C and compiled by `cc`, so a layout drift
+ * fails the probe at compile time. */
+#include <stdio.h>
+
+struct Record { int id; String tag; }
+
+int main(void)
+{
+    Box<Record> r = new Record { 7, "x" };
+    _Static_assert(sizeof(Box<Record>) == 2 * sizeof(void *), "Box handle is two words");
+    _Static_assert(sizeof(struct ct_Box_hdr) == 8, "the shared header is 8 bytes");
+    _Static_assert(sizeof(Box<Record>) == 16, "on LP64 the Box handle is 16 bytes");
+    printf("sizeof(Box)=%d sizeof(header)=%d alignof(Box)=%d\n",
+           (int)sizeof(Box<Record>), (int)sizeof(struct ct_Box_hdr),
+           (int)_Alignof(Box<Record>));
+    printf("payload_offset=%d expected=%d\n", r.payload_offset(),
+           (int)(((8 + _Alignof(struct Record) - 1) / _Alignof(struct Record))
+                 * _Alignof(struct Record)));
+    printf("refs=%d tag_refs=%d tag_len=%d\n", r.refs(), r.tag.refs(), r.tag.len());
+    r.release();
+    printf("after release refs=%d\n", r.refs());
+    return 0;
+}
