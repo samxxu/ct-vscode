@@ -5,10 +5,9 @@ extension-minor: 2
 
 # VS-PH-1 — 语法对齐 Ct 1.1.0（单卡多 stage）
 
-> **状态：S0–S5 已完成，S6 只剩「CI 切 OIDC + 收口」**。目标扩展版本 **`0.2.0`**；本卡一次做完，卡内 S0–S6 串行。
-> **进度**：S0–S5 已完成（S1a `f7c91e2`、S0+S1b `16c8977`、S2 `d3a17ad`、
-> S3 `2d1a7e5`、S4 `666788a`、S5 `9b84b73`）；S6a（0.2.0 四处版本、README/CHANGELOG、
-> 打包、证据）已完成；**S6b 待办见 §6 执笔人交接清单**（CI 切 OIDC → 打 tag → 推送）。
+> **状态：已完成**（0.2.0 已于 2026-11-27 发布到 Marketplace）。
+> **进度**：S0–S6 全部完成——S6b 的 CI 切 OIDC、annotated tag `v0.2.0`、push 与 Release
+> 均已完成（`88523ee` + tag + run `45909160446`，见 §2 台账与 §2.1 证据）。
 > **上游依据**：`ct-lang` tag `v1.1.0`（`aa223cf18e3ac143d066330569e537b8899ebbea`），
 > `docs/language-spec.md` §3 / §3.1、§4.65、§4.71、§4.73。
 > **覆盖缺口**：G-1 表达式 match 臂、G-2 `yield`、G-3 可选链、G-4 `box` 硬错、G-5 固有 impl 锁测、
@@ -36,7 +35,7 @@ extension-minor: 2
 | 基线门禁 | 基线 `ede274b` 时 `npm test` 为 182 检查；S1 红提交后为 196 检查（新增 14 条） | 已核对 |
 | 规范歧义 | 行式语法无法判定「`yield` 是否在 match 臂块内」，采用**行首近似**并登记（R-VS-1-1） | 已裁定 |
 | **版本口径** | Marketplace 已发布 **0.1.0**（用户确认；gallery API 目前仍只列 0.0.1），**0.1.0 不可复用**，本卡目标改为 **0.2.0**；`0.6.x` 是拆分前的扩展线，从未上架。四处置数：`package.json` → `package-lock.json` 根 `version` → README → CHANGELOG | 已裁定（2026-11-27） |
-| **发布凭据** | **裁定：走 Trusted Publishing（GitHub OIDC），不使用 `VSCE_PAT`**。Azure DevOps 全局 PAT 于 **2026-12-01 退役**，PAT 路线作废。策略字段：Repository owner `samxxu`、Repository `ct-vscode`、Workflow `release.yml`、Environment 留空 | 策略：用户 2026-11-27 已建（以首次 Release 成功为准）；CI：**待切 `--oidc`** |
+| **发布凭据** | **裁定：走 Trusted Publishing（GitHub OIDC），不使用 `VSCE_PAT`**。Azure DevOps 全局 PAT 于 **2026-12-01 退役**，PAT 路线作废。策略字段：Repository owner `samxxu`、Repository `ct-vscode`、Workflow `release.yml`、Environment 留空 | ✅ 已切 `--oidc`；Release 成功（run `45909160446`，log：`Published samxxu.ct-vscode v0.2.0.`）；仓内 `VSCE_PAT` secret 已删除（secrets `total_count: 0`） |
 | 红线 | 已推的 tag 不删、不强推、不改写历史；发布步骤失败只允许修凭据后 `gh run rerun` | 长期有效 |
 
 ## 2 Stage
@@ -64,22 +63,23 @@ S2–S4 期间不得修改 S1 已提交的断言（断言变更只能回到 S1 �
 | S3 可选链 | ✅ 已提交 | `2d1a7e5`：`ct-optional-chain`；断言转绿，剩 box 3 条 |
 | S4 `box` 退场 | ✅ 已提交 | `666788a`：`ct-box-type` 收窄 + `ct-box-alias-removed`，snippets 去掉 `box<`；`215 checks, 0 failed` |
 | S5 语料 + 防漂移门禁 | ✅ 已提交 | `9b84b73`：`test/surface.json`（51 条 / 4 组）+ `test/check-surface.py`（110 检查）+ G-5/G-6 锁测；`7fe31b5` 修 `__pycache__` |
-| S6 收口 | **S6a ✅ / S6b ⏳** | S6a `837931a`：0.2.0 四处版本、README/CHANGELOG/`.vscodeignore`、打包与证据表。S6b 未做：CI 仍为 `VSCE_PAT` + Node 20 + vsce `^3` |
+| S6 收口 | ✅ 完成 | S6a `837931a`：0.2.0 四处版本、README/CHANGELOG/`.vscodeignore`、打包与证据表。S6b `88523ee`：OIDC + Node 22 + vsce 4 + lock 重生成；tag `v0.2.0`；Release [45909160446](https://github.com/samxxu/ct-vscode/actions/runs/45909160446) 发布成功 |
 
-### S6 验证记录（0.2.0，提交 `837931a`）
+### S6 验证记录（0.2.0，发布提交 `88523ee` + tag `v0.2.0`）
 
 | 项 | 结果 |
 | --- | --- |
-| `npm test`（CI，真实 npm + Node 20） | ✅ `check-index` 26/0、`check-grammar` 220/0、`check-surface` 51 条 / 110 检查 / 0 failed；run [45907286724](https://github.com/samxxu/ct-vscode/actions/runs/45907286724)（`837931a`） |
+| `npm test`（CI，真实 npm + Node **22**） | ✅ `check-index` 26/0、`check-grammar` 220/0、`check-surface` 51 条 / 110 检查 / 0 failed；run [45909101828](https://github.com/samxxu/ct-vscode/actions/runs/45909101828)（`88523ee`） |
 | `npm test`（本机） | ✅ 同上；本机 npm CLI 不在 PATH，用等价的 `node --run test` 执行 |
 | `npx vsce package`（CI） | ✅ 产出 `ct-vscode.vsix`（11 文件，81034 B），并上传 artifact |
-| 本机打包 | ✅ `ct-vscode-0.2.0.vsix` 27541 B；与 CI artifact 的文件清单、逐文件大小一致（仅 zip 时间戳不同），sha256 `13649474…` |
+| 本机打包 | ✅ vsce **4.1.1**：`ct-vscode-0.2.0.vsix` 27694 B、11 文件，sha256 `d58ad461…`；CI（Node 22 + vsce 4）的 package 步同样成功 |
 | 包内容 | ✅ 不含 `test/**`、`docs/**`、`.github/**`、`package-lock.json` |
-| 运行时依赖 | ✅ `package.json` 无 `dependencies`（只有 `devDependencies`） |
+| 运行时依赖 | ✅ `npm ls --omit=dev` → `(empty)`（真实 npm 10.9.11）；`package.json` 无 `dependencies` |
 | 语言显示名 | ✅ 扩展 `displayName` 与 `aliases[0]` 均为 **Ct**；vsixmanifest `DisplayName` = `Ct — C with Traits`，编辑器语言显示名随 `aliases[0]` 变成 Ct（`CT` / `ct` 仍是别名） |
 | 真引擎交叉验证 | ✅ Oniguruma（VS Code 的 TextMate 引擎）下 74 条规则全部编译；54 份 fixtures 的 `(line, rule, text)` 命中与 `check-grammar.py` 的 Python 代理逐条一致（一次性验证，不在仓库门禁内） |
 | Marketplace | ✅ gallery API 当前列 `0.0.1`，用户确认 `0.1.0` 已发布；`0.2.0` 未占用 |
-| tag + Release | ⏳ 改走 **Trusted Publishing（OIDC）**，不依赖 `VSCE_PAT`：publisher 策略待用户建立（字段见 §4 第 0 步），`release.yml` 待切 `--oidc`；未打 tag |
+| 发布链路 | ✅ `release.yml`：`permissions {contents: read, id-token: write}` + `npx @vscode/vsce publish --oidc --packagePath ct-vscode.vsix`；`verify-pat.yml` 已删除；排除 `docs/` 后 `grep -rn "VSCE_PAT"` 为空 |
+| tag + Release | ✅ annotated tag `v0.2.0` 已推送；Release run [45909160446](https://github.com/samxxu/ct-vscode/actions/runs/45909160446) **success**，发布步日志 `Published samxxu.ct-vscode v0.2.0.`；gallery API 缓存更新可能滞后（发布日志已确认） |
 
 ## 3 退出判据（二值）
 
@@ -104,6 +104,8 @@ S2–S4 期间不得修改 S1 已提交的断言（断言变更只能回到 S1 �
 | E-VS-1-17 | **G-5 锁测**：`impl Cell {` 头部类型名有 `entity.name.type` scope；`impl Greeter for Person {` 仍命中 `ct-impl` |
 | E-VS-1-18 | **多级链不误判**：`doc["user"]["age"]`、`x[k].field` 不命中 `ct-generic-type` / `ct-generic-call` |
 | E-VS-1-19 | **OIDC 发布闭环**：`release.yml` 使用 `permissions: id-token: write` + `npx @vscode/vsce publish --oidc`，仓内无 `VSCE_PAT` secret 也能发布成功；`verify-pat.yml` 与 README 中的 `VSCE_PAT` 说明已删除；`@vscode/vsce` ≥ 4、两个工作流 Node 22、lock 已重生成 |
+
+> **判据状态**：E-VS-1-01…19 全部满足；E-VS-1-16（tag/Release/版本一致）与 E-VS-1-19（OIDC 闭环）的证据见 §2.1。
 
 ## 4 收口流程（S6b 固定动作，按序执行）
 
@@ -134,9 +136,10 @@ S2–S4 期间不得修改 S1 已提交的断言（断言变更只能回到 S1 �
 回滚：语法、测试与门禁、文档三笔独立提交，可分别 revert；`v0.2.0` 版本号与 tag 若已推送则不删，
 以新 PATCH（0.2.1）修正。
 
-## 6 执笔人交接清单（S6b，剩余全部工作）
+## 6 执笔人交接清单（S6b，✅ 已完成）
 
 > 主张人（需求/规划）已把决策、口径与判据全部落入本卡；以下由执笔人执行，完成后回填 §2 进度台账与 §2.1 证据表。
+> **执行记录**：`88523ee`（release.yml 切 OIDC、vsce 4.1.1、Node 22、lock 重生成、删 verify-pat.yml、README/CHANGELOG）→ tag `v0.2.0` → Release `45909160446` 成功；本清单 1–5 全部完成。
 
 | # | 工作 | 落点文件 | 完成判据 |
 | --- | --- | --- | --- |

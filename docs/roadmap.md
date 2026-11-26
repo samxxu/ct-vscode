@@ -41,7 +41,7 @@
 
 | 卡 | 主题 | 目标扩展版本 | 状态 |
 | --- | --- | --- | --- |
-| [VS-PH-1](phases/VS-PH-1/card.md) | 语法对齐 Ct 1.1.0（S0 语料 → S1 红 → S2 match/yield → S3 可选链 → S4 `box` → S5 门禁 → S6 收口） | 0.2.0 | **S0–S5 完成、S6a 完成**；S6b 待办：CI 切 OIDC → 打 `v0.2.0` → 推送（见卡 §6 执笔人交接清单） |
+| [VS-PH-1](phases/VS-PH-1/card.md) | 语法对齐 Ct 1.1.0（S0 语料 → S1 红 → S2 match/yield → S3 可选链 → S4 `box` → S5 门禁 → S6 收口） | 0.2.0 | ✅ **完成**：tag `v0.2.0` 已推送，Release [45909160446](https://github.com/samxxu/ct-vscode/actions/runs/45909160446) 以 OIDC 发布成功（`Published samxxu.ct-vscode v0.2.0.`） |
 
 **推进规则**
 
@@ -61,7 +61,7 @@
 | 打包 | `npx vsce package` | 成功，记录 vsix 文件大小 |
 | 依赖 | `npm ls --omit=dev` | 无运行时依赖 |
 | 包内容 | vsce 输出文件清单 | 不含 `test/**`、`docs/**`、`.github/**`、`package-lock.json` |
-| 发布闸 | 推送 `v*` tag | 会触发 `Release` 工作流；发布走 **Trusted Publishing（OIDC）**，无需 `VSCE_PAT`；publisher 策略须先建好（见卡片 §4 第 0 步） |
+| 发布闸 | 推送 `v*` tag | 会触发 `Release` 工作流；发布走 **Trusted Publishing（OIDC）**，无需 PAT；publisher 策略已建好（卡片 §4 第 0 步），2026-11-27 Release 成功（run `45909160446`） |
 | 文档 | 人工核对 | README 目标版本与构造表、CHANGELOG `0.2.0` 与实现一致 |
 
 ## 5 非目标（本路线明确不做）
