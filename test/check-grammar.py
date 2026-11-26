@@ -316,6 +316,18 @@ OPTIONAL = "\n".join([
     '    char *s = "a?.b";',
     "// a?.b",
 ])
+# G-5: inherent `impl N { … }` (ADT enum / non-generic struct) has no `for`;
+# the `ct-impl-open` fallback must still give the head type a type scope.
+G5_IMPL = "\n".join([
+    "impl Greeter for Person {",
+    "impl Cell {",
+])
+# G-6: a multi-level subscript chain is plain C; it must not be read as a
+# generic instantiation (`ct-generic-type` / `ct-generic-call`).
+SUBSCRIPT = "\n".join([
+    '    doc["user"]["age"];',
+    "    x[k].field = 1;",
+])
 
 # New tokens inside a string / comment are not code, exactly like `$` above.
 QUOTED = "\n".join([
@@ -1154,6 +1166,34 @@ def main():
     check("`ct-match-arm` scopes both arrow branches (wildcard / variant)",
           arm_caps["1"]["name"] == arm_caps["5"]["name"]
           == "keyword.operator.match-arm.ct", str(arm_caps))
+
+    print()
+    print("synthetic inherent impl -- G-5 lock (no `for`, still a type scope):")
+    impl_open = dict(rules).get("ct-impl-open") or {}
+    inner = [p.get("name") for p in impl_open.get("patterns", []) if "match" in p]
+    check("`ct-impl-open` scopes the inherent head type as entity.name.type.ct",
+          "entity.name.type.ct" in inner, str(inner))
+    rows = scan(G5_IMPL, rules)
+    by_line = {n: [h[0] for h in hs] for n, _, hs in rows}
+    for n, line, hits in rows:
+        print("    %3d: %-22s %s" % (n, ", ".join(h[0] for h in hits), line.strip()))
+    check("`impl Greeter for Person {` still -> ct-impl",
+          "ct-impl" in by_line[1], str(by_line[1]))
+    check("inherent `impl Cell {` -> ct-impl-open",
+          "ct-impl-open" in by_line[2], str(by_line[2]))
+
+    print()
+    print("synthetic multi-level chain -- G-6 lock (not a generic instantiation):")
+    rows = scan(SUBSCRIPT, rules)
+    by_line = {n: [h[0] for h in hs] for n, _, hs in rows}
+    for n, line, hits in rows:
+        print("    %3d: %-22s %s" % (n, ", ".join(h[0] for h in hits), line.strip()))
+    check('`doc["user"]["age"]` is not ct-generic-type / ct-generic-call',
+          not any(h in ("ct-generic-type", "ct-generic-call") for h in by_line[1]),
+          str(by_line[1]))
+    check("`x[k].field` is not ct-generic-type / ct-generic-call",
+          not any(h in ("ct-generic-type", "ct-generic-call") for h in by_line[2]),
+          str(by_line[2]))
 
 
     # v0.26.4 / DOC-68: the go-to-definition scanner lives in ../indexer.js and

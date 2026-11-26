@@ -41,7 +41,7 @@
     "url": "https://github.com/samxxu/ct-vscode/issues"
   },
   "scripts": {
-    "test": "node test/check-index.js && python3 test/check-grammar.py",
+    "test": "node test/check-index.js && python3 test/check-grammar.py && python3 test/check-surface.py",
     "package": "vsce package",
     "publish": "vsce publish"
   },
