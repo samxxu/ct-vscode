@@ -1,8 +1,24 @@
 # Ct — C with Traits for VS Code
 
+[![CI](https://github.com/samxxu/ct-vscode/actions/workflows/ci.yml/badge.svg)](https://github.com/samxxu/ct-vscode/actions/workflows/ci.yml)
+
 Syntax highlighting, snippets, go-to-definition and language configuration for
 **Ct**, the trait-flavoured C compiled by
 [`ct`](https://github.com/samxxu/ct-lang) (`ctc` remains a compatibility alias).
+
+This repository is the standalone home of the extension; it was split out of
+`ct-lang`'s `editors/vscode` directory and is built, tested and released on its
+own.
+
+**Requirements**
+
+- VS Code 1.75 or newer.
+- `ct` 0.88.0 or newer to get the whole 0.88 language surface highlighted
+  (`ref` / `out`, `Box<T>`, `String` / `Str`, slices, ADT / `match`, `?`,
+  `$name`). Older compilers still work — the extension is a syntax superset and
+  simply has nothing to highlight for constructs that did not exist yet.
+- The extension version line is **independent of `CTC_VERSION`**: 0.6.1 here
+  means "0.6.1 of the VS Code extension", not "0.6.1 of the compiler".
 
 ```c
 trait Greeter {
@@ -130,46 +146,40 @@ extension; use `ct` (or the `ctc` alias) for that.
 
 ## Install
 
-From a local checkout (development):
+From the [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=samxxu.ct-vscode)
+(search for “Ct — C with Traits”), or from a local checkout:
 
 ```bash
-cd editors/vscode
-code --extensionDevelopmentPath="$PWD"   # open VS Code with the extension loaded
+git clone https://github.com/samxxu/ct-vscode.git
+cd ct-vscode
+npm ci
+npx vsce package
+code --install-extension ct-vscode-0.6.1.vsix
 ```
 
-Or symlink it into your extensions folder and reload VS Code:
+For extension development, open this repository in VS Code and press `F5`
+(`.vscode/launch.json` is not committed; the Run Extension configuration uses
+`${workspaceFolder}` as `--extensionDevelopmentPath`). Alternatively symlink the
+checkout into your extensions folder and reload VS Code:
 
 ```bash
 ln -s "$PWD" ~/.vscode/extensions/ct-vscode
 ```
 
-To get an F5 workflow, add a launch configuration at the repository root as
-`.vscode/launch.json`:
-
-```json
-{
-  "version": "0.2.0",
-  "configurations": [
-    {
-      "name": "Run Extension",
-      "type": "extensionHost",
-      "request": "launch",
-      "args": ["--extensionDevelopmentPath=${workspaceFolder}/editors/vscode"]
-    }
-  ]
-}
-```
-
 ## Checks
 
 ```bash
-python3 test/check-grammar.py    # 168 assertions (including the 26 index checks); exit code 0 means it passed
-node test/check-index.js         # the indexer's own 26 assertions, runnable without VS Code
+npm test                        # both gates below, in one go
+python3 test/check-grammar.py   # grammar assertions (including the 26 index checks); exit code 0 means it passed
+node test/check-index.js        # the indexer's own 26 assertions, runnable without VS Code
 ```
 
-The script replays the grammar's patterns with Python's `re` over the demos in
-`examples/`, the cases in `test/cases/` and the Phase 20–26 fixtures in
-`test/ast/`, asserting both directions: the Ct rules fire on `trait` / `use` /
+The script replays the grammar's patterns with Python's `re` over the samples in
+`test/fixtures/`, which mirror the paths those files had in `ct-lang`
+(`examples/…`, `test/cases/…`, `test/ast/…`, `test/modules/…`). The tests are
+self-contained: nothing outside this repository is read.
+
+Assertions run in both directions: the Ct rules fire on `trait` / `use` /
 `impl` / `self` / `loop` / `..` / `=>` / generics, and they stay silent inside
 comments, strings and look-alike identifiers (`use_it`, `selfish`, `...`,
 `int loop = 5`, `p->x`).
@@ -182,16 +192,21 @@ once before publishing.
 ## Package and publish
 
 ```bash
-cd editors/vscode
-npx @vscode/vsce package        # produces ct-vscode-0.6.1.vsix
-npx @vscode/vsce publish        # needs a Marketplace publisher + PAT
+npm ci
+npm test
+npm run package                 # -> ct-vscode-0.6.1.vsix
+npm run publish                 # needs a Marketplace publisher + VSCE_PAT
 ```
+
+CI ([ci.yml](.github/workflows/ci.yml)) builds the `.vsix` on every push and
+pull request and uploads it as an artifact. [release.yml](.github/workflows/release.yml)
+publishes on a `v*` tag using the `VSCE_PAT` repository secret.
 
 Two things are needed before publishing:
 
 - **`publisher`** in `package.json` must match your
   [Marketplace publisher id](https://marketplace.visualstudio.com/manage)
-  (currently set to `samxxu`, which does not exist yet).
+  (currently set to `samxxu`).
 - **`icon.png`** — a 128×128 PNG referenced as `"icon": "icon.png"`.
   It is intentionally absent from the repo; add your own before publishing
   (`vsce` still packages without it, but the listing looks bare).
@@ -199,14 +214,21 @@ Two things are needed before publishing:
 ## License
 
 MIT — see [LICENSE](LICENSE). The compiler itself is GPL-3.0-or-later with an
-output exception; see the [repository](https://github.com/samxxu/ct-lang) for
-details.
+output exception; see the [ct-lang repository](https://github.com/samxxu/ct-lang)
+for details.
 
 ---
 
 ## 中文说明
 
 给 **Ct（C with Traits）** 用的 VS Code 扩展：语法高亮 + 代码片段 + 跳转定义 + 编辑器配置。
+
+- 本仓是扩展的独立仓库（自 `ct-lang` 的 `editors/vscode` 迁出），可独立测试、构建、发布。
+- **要求**：VS Code 1.75+；`ct` 0.88.0 及以上可完整高亮 0.88 语言面（`ref` / `out`、`Box<T>`、
+  `String` / `Str`、切片、ADT / `match`、`?`、`$name`），更老的 `ct` 同样可用，只是新构造没有对应规则。
+- **版本线独立**：扩展版本与编译器的 `CTC_VERSION` 无关，0.6.1 指的是扩展本身的版本。
+- **安装**：Marketplace 搜 “Ct — C with Traits”，或 `npm ci && npx vsce package` 后用
+  `code --install-extension ct-vscode-0.6.1.vsix` 本地安装。
 
 - **Ct 独有构造**（`trait` 定义、`use` 子句含逗号列表、`impl … for …`、隐式 `self`）由本扩展高亮；
   **其余全部交给 VS Code 内置的 C 语法**，不需要维护一份 C 语法副本。
@@ -229,6 +251,7 @@ details.
   不区分实例化**。
   它是按行扫描的近似索引，不做完整类型推导：同名方法可能给出多个候选，字段不建索引，字符串/注释里的词也会被当作名字解析。
 - 语法与片段仍是纯声明式 JSON，跳转逻辑拆成 `extension.js`（只用 `vscode` API）与
-  `indexer.js`（纯行扫描器，可被 Node 直接断言），**无构建、无第三方依赖**，可直接
-  `npx @vscode/vsce package` 打包。
-- 发布前需要补两样：`package.json` 里的 `publisher` 改成你真实的 Marketplace 发布者 ID，以及自备一张 128×128 的 `icon.png`。
+  `indexer.js`（纯行扫描器，可被 Node 直接断言），**无构建、无运行时依赖**，可直接
+  `npm run package` 打包；测试用 `npm test`，样例都在 `test/fixtures/`，不依赖其它仓库。
+- 发布前需要补两样：`package.json` 里的 `publisher` 改成你真实的 Marketplace 发布者 ID，以及自备一张 128×128 的 `icon.png`；
+  GitHub Actions 需要配置 `VSCE_PAT` secret（tag `v*` 触发 [release.yml](.github/workflows/release.yml)）。

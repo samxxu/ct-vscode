@@ -11,7 +11,11 @@ This is a smoke test, not a substitute for opening VS Code: Python's `re` is not
 Oniguruma, and the real engine also runs VS Code's built-in `source.c` grammar,
 which this script delegates to as the terminal pseudo-rule "C".
 
-    python3 editors/vscode/test/check-grammar.py
+Every sample file is read from `test/fixtures/`, which mirrors the layout the
+files had in the ct-lang repository (`examples/...`, `test/ast/...`,
+`test/modules/...`). Nothing outside this repository is read.
+
+    python3 test/check-grammar.py
 """
 
 import json
@@ -22,8 +26,8 @@ import subprocess
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-EXT = os.path.dirname(HERE)                              # editors/vscode
-ROOT = os.path.dirname(os.path.dirname(EXT))             # repository root
+EXT = os.path.dirname(HERE)                              # repository root
+ROOT = os.path.join(HERE, "fixtures")                    # self-contained samples
 GRAMMAR = os.path.join(EXT, "syntaxes", "ct.tmLanguage.json")
 
 CT_CASES = (

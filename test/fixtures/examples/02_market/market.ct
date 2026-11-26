@@ -1,0 +1,176 @@
+//@ct-requires: ct-ast
+// market.ct — 多个对象相互调用：钱包、货架、状态汇报
+//
+// 末尾用一个 `Reporter all[2]` 接口值数组把 Trader 与 Shop 装进同一个
+// trait 值再统一派发；接口值数组是 ct-ast 的能力，L0 种子不支持，故本文件
+// 声明 `//@ct-requires: ct-ast`（`test/run.sh` 跳过，其余门禁照跑）。
+//
+// 三个 trait 落在两个 struct 上：
+//   Trader 有 Purse（钱包）与 Reporter（汇报）能力
+//   Shop   有 Shelf（货架）、Purse、Reporter 能力
+// 同一个 trait 在两个类型上给出不同实现（Shop 的 spend 永远拒绝），这正是 trait 的用途。
+//
+// 一笔交易属于货架，不属于 main：`fruit.sell_to(alice, 2)` 自己在对象层完成
+// 「按货架价格收款 → 出货 → 入账」，main 只表达业务意图。`sell_to` 的参数是
+// `Purse` 接口值，所以货架不需要知道对面是 Trader 还是另一个 Shop。
+//
+// 注意：impl 方法体内部的 `self->m()` 也会被重写成 vptr 调用（见 docs/language-spec.md 4.3）；
+// 这里把对象间的相互调用留在对象层，而不是摊在 main 里。
+// License: MIT; see LICENSE.EXCEPTION
+#include <stdio.h>
+
+trait Purse {
+    int balance();
+    int spend(int amount);
+    void earn(int amount);
+}
+
+trait Shelf {
+    int price();
+    int stock();
+    int take(int n);
+    int sell_to(Purse buyer, int n);
+}
+
+trait Reporter {
+    void report();
+}
+
+struct Trader {
+    char *name;
+    int coins;
+} use Purse, Reporter;
+
+struct Shop {
+    char *name;
+    int price;
+    int units;
+    int coins;
+} use Shelf, Purse, Reporter;
+
+/* 构造入口：字段布局与初始值属于实现，调用点只给业务参数。 */
+static Trader trader(char *name, int coins) {
+    Trader t = { .name = name, .coins = coins };
+    return t;
+}
+
+static Shop shop(char *name, int price, int units) {
+    Shop s = { .name = name, .price = price, .units = units, .coins = 0 };
+    return s;
+}
+
+impl Purse for Trader {
+    int balance() {
+        return self->coins;
+    }
+    int spend(int amount) {
+        if (amount > self->coins) {
+            printf("trader %s is short by %d\n", self->name, amount - self->coins);
+            return 0;
+        }
+        self->coins -= amount;
+        return amount;
+    }
+    void earn(int amount) {
+        self->coins += amount;
+    }
+}
+
+impl Reporter for Trader {
+    void report() {
+        printf("trader %s: coins=%d\n", self->name, self->coins);
+    }
+}
+
+impl Shelf for Shop {
+    int price() {
+        return self->price;
+    }
+    int stock() {
+        return self->units;
+    }
+    int take(int n) {
+        if (n > self->units) {
+            n = self->units;
+        }
+        self->units -= n;
+        printf("shop %s sells %d\n", self->name, n);
+        return n;
+    }
+    /* 交易归货架：先向买家收款（失败就整笔取消），再出货、入账。
+       `buyer` 是接口值，所以这里对 Trader 和 Shop 是同一条路径。 */
+    int sell_to(Purse buyer, int n) {
+        int paid = buyer.spend(self->price * n);
+        if (paid == 0) {
+            return 0;
+        }
+        self->take(n);
+        self->earn(paid);
+        return paid;
+    }
+}
+
+impl Purse for Shop {
+    int balance() {
+        return self->coins;
+    }
+    int spend(int amount) {
+        printf("shop %s never spends %d\n", self->name, amount);
+        return 0;
+    }
+    void earn(int amount) {
+        self->coins += amount;
+        printf("shop %s receives %d\n", self->name, amount);
+    }
+}
+
+impl Reporter for Shop {
+    void report() {
+        printf("shop %s: units=%d price=%d coins=%d\n",
+               self->name, self->units, self->price, self->coins);
+    }
+}
+
+/* 一个只认 Reporter 的函数：调用点看不到具体是 Trader 还是 Shop。 */
+static void broadcast(Reporter r) {
+    r.report();
+}
+
+int main() {
+    Trader alice = trader("alice", 20);
+    Trader bob = trader("bob", 3);
+    Shop fruit = shop("fruit", 4, 5);
+    Purse payer;
+
+    alice.report();
+    bob.report();
+    fruit.report();
+
+    /* 一笔成功的交易：取货、扣款、入账都在货架内部完成。
+       接口实参必须在调用点先装箱——impl 方法的接口参数不会自动装箱。 */
+    payer = alice;
+    fruit.sell_to(payer, 2);
+
+    /* bob 想买 3 件，但钱不够：整笔取消，货架不出货 */
+    payer = bob;
+    fruit.sell_to(payer, 3);
+
+    /* 对象之间直接转账：alice 借给 bob 6 枚，bob 再买 1 件 */
+    bob.earn(alice.spend(6));
+    payer = bob;
+    fruit.sell_to(payer, 1);
+
+    alice.report();
+    bob.report();
+    fruit.report();
+
+    // 同一个 Reporter 数组里同时装 Trader 与 Shop：赋值时各自装箱，
+    // broadcast 只经接口值派发，两个 impl 走同一条路径。
+    Reporter all[2];
+    all[0] = alice;
+    all[1] = fruit;
+    for (int i = 0; i < 2; i++) {
+        broadcast(all[i]);
+    }
+    return 0;
+}

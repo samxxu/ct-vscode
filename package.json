@@ -1,7 +1,7 @@
 {
   "name": "ct-vscode",
-  "displayName": "CT — C with Traits",
-  "description": "Syntax highlighting, snippets, go-to-definition and language configuration for CT (C with Traits), the trait-flavoured C compiled by ct (ctc is the compatibility alias).",
+  "displayName": "Ct — C with Traits",
+  "description": "Syntax highlighting, snippets, go-to-definition and language configuration for Ct (C with Traits), the trait-flavoured C compiled by ct (ctc is the compatibility alias).",
   "version": "0.6.1",
   "main": "./extension.js",
   "activationEvents": [
@@ -32,14 +32,21 @@
     "color": "#16222e",
     "theme": "dark"
   },
-  "homepage": "https://github.com/samxxu/ct-lang",
+  "homepage": "https://github.com/samxxu/ct-vscode",
   "repository": {
     "type": "git",
-    "url": "https://github.com/samxxu/ct-lang.git",
-    "directory": "editors/vscode"
+    "url": "https://github.com/samxxu/ct-vscode.git"
   },
   "bugs": {
-    "url": "https://github.com/samxxu/ct-lang/issues"
+    "url": "https://github.com/samxxu/ct-vscode/issues"
+  },
+  "scripts": {
+    "test": "node test/check-index.js && python3 test/check-grammar.py",
+    "package": "vsce package",
+    "publish": "vsce publish"
+  },
+  "devDependencies": {
+    "@vscode/vsce": "^3"
   },
   "contributes": {
     "languages": [

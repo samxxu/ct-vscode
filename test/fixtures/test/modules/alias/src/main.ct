@@ -1,0 +1,16 @@
+/* a unit import names a file; a by-name import pulls one exported name in under
+   the alias on the right */
+import app::model;
+import app::model::Point as Point;
+
+#include <stdio.h>
+
+int main(void)
+{
+    struct Point p;
+
+    p.x = 1;
+    p.y = 2;
+    printf("%d %d\n", p.x + p.y, app::scaled(4));
+    return 0;
+}

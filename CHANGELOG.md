@@ -21,6 +21,13 @@
 - Snippets: `box`, `String`, `Str`, `slice`, `adt`, `match`, `refout`, `try`.
 - `test/check-grammar.py`: 179 assertions, up from 168, with a v0.88 synthetic
   fixture covering all new rules.
+- Repository: the extension moved out of `ct-lang`'s `editors/vscode` into the
+  standalone [ct-vscode](https://github.com/samxxu/ct-vscode) repository.
+  `package.json` metadata points at the new home, the grammar samples are copied
+  into `test/fixtures/` so the tests no longer read anything outside this repo,
+  and GitHub Actions now builds the `.vsix` on every push and publishes on a
+  `v*` tag. The extension version stays **0.6.1**; it is its own line and does
+  not track the compiler's `CTC_VERSION`.
 
 ## 0.6.0
 
