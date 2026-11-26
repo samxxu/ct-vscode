@@ -68,6 +68,14 @@ CT_CASES = (
     "test/ast/67_type_alias/lib/lib.m.ct",
     # Phase 21 closures: `=>` is the closure arrow.
     "test/ast/70_closure_basic/prog.ct",
+    # LANG-29 B5 (v1.1): expression `match`. A value arm is `Pattern => expr`,
+    # `yield` is the block arm's exit, and the statement form is unchanged.
+    "test/ast/302_adt_match_expr/prog.ct",
+    # The two upstream error fixtures pin the line-level `yield` model
+    # (R-VS-1-1): a statement-initial `yield` is coloured even when it sits
+    # outside an arm, where the compiler rejects it.
+    "test/ast/errors/l29b5_yield_outside.ct",
+    "test/ast/errors/l29b5_multi_yield.ct",
     # Phase 22/23 `loop`: the keyword only exists in statement position.
     "test/ast/100_loop_contextual_label/prog.ct",
     "test/ast/102_loop_range_basic/prog.ct",
@@ -154,6 +162,18 @@ CLOSURE = "\n".join([
     "    int (*add)(int x) = (int x) => x + 1;",
     "    if (a >= b) {",
     "    p->x = 1;",
+])
+# LANG-29 B5 (v1.1): `yield` is contextual. Only the statement-initial spelling
+# is the arm exit; `int yield = 1;`, `goto yield;`, `x.yield` and a bare
+# `yield;` stay ordinary identifiers, and a string/comment never fires.
+YIELD = "\n".join([
+    "    yield prod + 1;",
+    "    int yield = 1;",
+    "    goto yield;",
+    "    x.yield = 2;",
+    "    yield;",
+    'char *s = "yield x";',
+    "// yield x",
 ])
 # Phase 29: `foreach` is a keyword only as `foreach(`; the entry pair
 # `item.key` / `item.value` is the Map protocol and nothing else is special.
@@ -286,7 +306,7 @@ NEW_RULES = {
     "ct-foreach-entry", "ct-container-method",
     "ct-ref", "ct-out", "ct-new", "ct-box-type", "ct-owned-type",
     "ct-adt-match", "ct-adt-construct", "ct-slice-type", "ct-try",
-    "ct-materialize",
+    "ct-materialize", "ct-match-arm", "ct-yield",
 }
 
 
@@ -512,6 +532,28 @@ def main():
             check("`(int x) => ...` -> ct-closure-arrow",
                   any(h[0] == "ct-closure-arrow" for _, l, hs in rows
                       if "=>" in l for h in hs))
+        if "302_adt_match_expr" in rel:
+            arm = [h for _, l, hs in rows if "N.Leaf(v) => v," in l for h in hs]
+            check("`N.Leaf(v) => v,` -> ct-match-arm",
+                  any(h[0] == "ct-match-arm" for h in arm), str(arm))
+            check("`Pattern => expr` does not fall back to ct-closure-arrow",
+                  not any(h[0] == "ct-closure-arrow" for h in arm), str(arm))
+            check("`yield prod + 1;` -> ct-yield",
+                  any(h[0] == "ct-yield" for _, l, hs in rows
+                      if "yield prod + 1;" in l for h in hs))
+            check("expression-position `int t = match (b) {` -> ct-adt-match",
+                  any(h[0] == "ct-adt-match" for _, l, hs in rows
+                      if "int t = match (b) {" in l for h in hs))
+            check("the header's `=>` / `yield` examples stay inside the block comment",
+                  all(h[0] == "comment-block" for _, l, hs in rows
+                      if "Pattern => expr" in l or "yield` is the arm" in l
+                      for h in hs))
+        if "errors/l29b5_yield_outside" in rel:
+            # R-VS-1-1: a statement-initial `yield` outside an arm is illegal and
+            # still coloured -- the documented line-level approximation.
+            check("arm-less `yield 1;` is still ct-yield (R-VS-1-1)",
+                  any(h[0] == "ct-yield" for _, l, hs in rows
+                      if "yield 1;" in l for h in hs))
         if "100_loop_contextual_label" in rel:
             check("statement `loop(2)` -> ct-loop",
                   any(h[0] == "ct-loop" for _, l, hs in rows
@@ -856,8 +898,25 @@ def main():
     for n, line, hits in rows:
         print("    %3d: %-22s %s" % (n, ", ".join(h[0] for h in hits), line.strip()))
     check("`=>` -> ct-closure-arrow", "ct-closure-arrow" in by_line[1], str(by_line[1]))
+    check("closure `(int x) => ...` is not ct-match-arm",
+          "ct-match-arm" not in by_line[1], str(by_line[1]))
     check("`>=` is not ct-closure-arrow", "ct-closure-arrow" not in by_line[2], str(by_line[2]))
     check("`->` is not ct-closure-arrow", "ct-closure-arrow" not in by_line[3], str(by_line[3]))
+
+    print()
+    print("synthetic yield -- contextual keyword, statement-initial only:")
+    rows = scan(YIELD, rules)
+    by_line = {n: [h[0] for h in hs] for n, _, hs in rows}
+    for n, line, hits in rows:
+        print("    %3d: %-22s %s" % (n, ", ".join(h[0] for h in hits), line.strip()))
+    check("statement-initial `yield prod + 1;` -> ct-yield",
+          "ct-yield" in by_line[1], str(by_line[1]))
+    check("`int yield = 1;` is not ct-yield", "ct-yield" not in by_line[2], str(by_line[2]))
+    check("`goto yield;` is not ct-yield", "ct-yield" not in by_line[3], str(by_line[3]))
+    check("`x.yield = 2;` is not ct-yield", "ct-yield" not in by_line[4], str(by_line[4]))
+    check("bare `yield;` is not ct-yield", "ct-yield" not in by_line[5], str(by_line[5]))
+    check("`yield` inside a string stays a string", "ct-yield" not in by_line[6], str(by_line[6]))
+    check("`yield` inside a comment stays a comment", "ct-yield" not in by_line[7], str(by_line[7]))
 
     print()
     print("synthetic type alias -- contextual and line-anchored:")
