@@ -13,12 +13,14 @@ own.
 **Requirements**
 
 - VS Code 1.75 or newer.
-- `ct` 0.88.0 or newer to get the whole 0.88 language surface highlighted
-  (`ref` / `out`, `Box<T>`, `String` / `Str`, slices, ADT / `match`, `?`,
-  `$name`). Older compilers still work — the extension is a syntax superset and
-  simply has nothing to highlight for constructs that did not exist yet.
-- The extension version line is **independent of `CTC_VERSION`**: 0.6.1 here
-  means "0.6.1 of the VS Code extension", not "0.6.1 of the compiler".
+- `ct` 1.1.0 or newer to get the whole 1.1 language surface highlighted
+  (expression `match` arms `Pattern => expr` and `yield`, optional chain
+  `p?.f` / `p?[i]`, `ref` / `out`, `Box<T>` (the lower-case `box<T>` alias is a
+  hard error in 1.1), `String` / `Str`, slices, ADT / `match`, `?`, `$name`).
+  Older compilers still work — the extension is a syntax superset and simply
+  has nothing to highlight for constructs that did not exist yet.
+- The extension version line is **independent of `CTC_VERSION`**: 0.2.0 here
+  means "0.2.0 of the VS Code extension", not "0.2.0 of the compiler".
 
 ```c
 trait Greeter {
@@ -70,12 +72,16 @@ impl Greeter for Person {
 | `cfg into { .backlog = 64; }` | the inline spelling gets the same scopes (`ct-into-inline-field` / `ct-into-inline-method`) |
 | `p into { … }.add(2)` / `}->port` / `}[1]` | suffixes stay ordinary C after the block |
 | `ref int r` / `out int v` | `storage.modifier` for the call-site sugar |
-| `Box<Record> r = new Record { … }` | `Box` type + `new` keyword (`box` is the deprecated alias) |
+| `Box<Record> r = new Record { … }` | `Box` type + `new` keyword (`box<T>` was removed in 1.1) |
 | `String s = "hi";` / `Str view = s.as_str();` | built-in owning / borrowed string types |
 | `int[] nums` | slice type `T[]` |
 | `enum Shape { Circle(int r), Empty() }` | payload members make it an ADT |
 | `Shape.Circle(2)` / `match (s) { … }` | variant constructor + `match` keyword |
+| `Shape.Circle(r) => expr` / `_ => expr` | arm arrow `keyword.operator.match-arm.ct`; the variant keeps the ADT scopes |
+| `yield expr;` | `keyword.control.yield.ct` (contextual; only at statement start) |
 | `g()?` | postfix `?` error propagation |
+| `p?.f` / `p?[i]` | optional chain (`keyword.operator`; `c?.5 : 1.0` stays a conditional) |
+| `box<Record> r = …` | `invalid.deprecated` — the 1.1 compiler removed the alias |
 | `a.m()$x.n()` | `$x` materialization target |
 
 `.m.ct` mapping units are plain `.ct` files to the editor (the suffix still
@@ -85,6 +91,19 @@ prologues are handled by the C grammar.
 Everything else — strings, comments, preprocessor lines, types, function
 bodies — is **VS Code's own C grammar**, pulled in with `include: source.c`.
 No duplicated C grammar to maintain and nothing to drift.
+
+### Known line-level approximations
+
+The grammar is line-oriented, so a few constructs are approximated rather than
+scoped exactly:
+
+- `yield` is coloured only when it starts a statement (leading whitespace
+  allowed). That is the arm exit's normal spelling; a `yield` outside an arm is
+  illegal code and is still coloured, and a `yield` that shares its line with
+  other code is not coloured.
+- A value arm whose block is `Pattern => { … yield … }` looks the same as a
+  statement arm on one line, so its arrow keeps `ct-closure-arrow`; only the
+  `Pattern => expr` spelling gets `ct-match-arm`.
 
 ## Go to definition
 
@@ -154,7 +173,7 @@ git clone https://github.com/samxxu/ct-vscode.git
 cd ct-vscode
 npm ci
 npx vsce package
-code --install-extension ct-vscode-0.6.1.vsix
+code --install-extension ct-vscode-0.2.0.vsix
 ```
 
 For extension development, open this repository in VS Code and press `F5`
@@ -169,15 +188,23 @@ ln -s "$PWD" ~/.vscode/extensions/ct-vscode
 ## Checks
 
 ```bash
-npm test                        # both gates below, in one go
-python3 test/check-grammar.py   # grammar assertions (including the 26 index checks); exit code 0 means it passed
+npm test                        # all three gates, in one go
 node test/check-index.js        # the indexer's own 26 assertions, runnable without VS Code
+python3 test/check-grammar.py   # grammar behaviour (also re-runs the index checks)
+python3 test/check-surface.py   # every CT-only construct still has a rule + a fixture hit
 ```
 
 The script replays the grammar's patterns with Python's `re` over the samples in
 `test/fixtures/`, which mirror the paths those files had in `ct-lang`
 (`examples/…`, `test/cases/…`, `test/ast/…`, `test/modules/…`). The tests are
 self-contained: nothing outside this repository is read.
+
+`test/check-surface.py` is the anti-drift gate: `test/surface.json` maps each
+CT-only construct (grouped as top-level / keywords / control / types) to a rule
+name, a fixture and a line selector. Renaming or deleting a rule, or dropping a
+fixture, fails the gate. `test/fixtures/README.md` records where the corpus came
+from (upstream tag, commit, file count) and the gate checks that it still
+matches the files on disk.
 
 Assertions run in both directions: the Ct rules fire on `trait` / `use` /
 `impl` / `self` / `loop` / `..` / `=>` / generics, and they stay silent inside
@@ -194,7 +221,7 @@ once before publishing.
 ```bash
 npm ci
 npm test
-npm run package                 # -> ct-vscode-0.6.1.vsix
+npm run package                 # -> ct-vscode-0.2.0.vsix
 npm run publish                 # needs a Marketplace publisher + VSCE_PAT
 ```
 
@@ -224,11 +251,12 @@ for details.
 给 **Ct（C with Traits）** 用的 VS Code 扩展：语法高亮 + 代码片段 + 跳转定义 + 编辑器配置。
 
 - 本仓是扩展的独立仓库（自 `ct-lang` 的 `editors/vscode` 迁出），可独立测试、构建、发布。
-- **要求**：VS Code 1.75+；`ct` 0.88.0 及以上可完整高亮 0.88 语言面（`ref` / `out`、`Box<T>`、
+- **要求**：VS Code 1.75+；`ct` 1.1.0 及以上可完整高亮 1.1 语言面（表达式 `match` 值臂与
+  `yield`、可选链 `p?.f` / `p?[i]`、`ref` / `out`、`Box<T>`（小写 `box<T>` 在 1.1 是硬错）、
   `String` / `Str`、切片、ADT / `match`、`?`、`$name`），更老的 `ct` 同样可用，只是新构造没有对应规则。
-- **版本线独立**：扩展版本与编译器的 `CTC_VERSION` 无关，0.6.1 指的是扩展本身的版本。
+- **版本线独立**：扩展版本与编译器的 `CTC_VERSION` 无关，0.2.0 指的是扩展本身的版本。
 - **安装**：Marketplace 搜 “Ct — C with Traits”，或 `npm ci && npx vsce package` 后用
-  `code --install-extension ct-vscode-0.6.1.vsix` 本地安装。
+  `code --install-extension ct-vscode-0.2.0.vsix` 本地安装。
 
 - **Ct 独有构造**（`trait` 定义、`use` 子句含逗号列表、`impl … for …`、隐式 `self`）由本扩展高亮；
   **其余全部交给 VS Code 内置的 C 语法**，不需要维护一份 C 语法副本。

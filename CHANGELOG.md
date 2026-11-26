@@ -1,10 +1,39 @@
 # Change Log
 
-## Unreleased
+## 0.2.0
 
-- LANG-24 Stage A: the canonical spelling is `Box<T>`; `ct-box-type` matches
-  both `Box` and the deprecated `box` alias, and the snippet defaults to
-  `Box`. The 0.6.1 entry below keeps the spelling it shipped with.
+- Grammar aligned with **Ct 1.1.0** (`ct-lang` tag `v1.1.0`, commit
+  `aa223cf1`).
+  - Expression `match` (LANG-29 B5): `ct-match-arm` gives the `Pattern => expr`
+    arm arrow `keyword.operator.match-arm.ct` instead of `ct-closure-arrow`;
+    the variant keeps the same `entity.name.type.adt.ct` /
+    `entity.name.function.variant.ct` scopes as `ct-adt-construct`, so the
+    statement form highlights exactly as before. `ct-yield` colours a
+    statement-initial `yield` (`int yield = 1;`, `goto yield;`, `x.yield`,
+    strings and comments are unaffected).
+  - Optional chain (Phase 53): `ct-optional-chain` colours `?.` / `?[` in
+    `p?.f` and `p?[i]`. `c?.5 : 1.0` stays the conditional operator (the `?` is
+    followed by a float), and the statement-tail `g()?` stays `ct-try`.
+  - `box<T>` removal: `ct-box-type` now matches `Box<T>` only; the lower-case
+    alias maps to `ct-box-alias-removed` → `invalid.deprecated.ct`. Snippets
+    spell `Box<` only. A bare `Box` / `box` identifier is untouched.
+  - Line-level approximations are documented in the README: block-bodied value
+    arms keep `ct-closure-arrow`, and `yield` is recognised at statement start
+    only.
+- Anti-drift gate: `test/surface.json` + `test/check-surface.py` (51 entries in
+  four groups: top-level / keywords / control / types) assert that every
+  CT-only construct still has a rule and a fixture hit. `npm test` now runs
+  `check-index → check-grammar → check-surface`.
+- Fixtures re-taken from `ct-lang` `v1.1.0` (`aa223cf1`): 54 files, including
+  `302_adt_match_expr`, `301_adt_methods`, `303_map_binding`, the `p53_*`
+  optional-chain samples and the surface-gate samples
+  (`236_result_try_defer`, `231_str_ops`, `p80_retain/borrow_out_ref.ct`,
+  `p81_box/layout.ct`). `test/fixtures/README.md` records the tag, commit, file
+  list and count; the surface gate checks that record against the files on disk.
+- `test/check-grammar.py`: 220 checks, up from 182 at 0.6.1.
+- Version line: the Marketplace line is **0.0.1 → 0.1.0 → 0.2.0**. The `0.6.x`
+  entries below are the pre-split extension line and were never published; as
+  before, the extension version is independent of `CTC_VERSION`.
 
 ## 0.6.1
 

@@ -6,8 +6,9 @@ extension-minor: 2
 # VS-PH-1 — 语法对齐 Ct 1.1.0（单卡多 stage）
 
 > **状态：进行中**。目标扩展版本 **`0.2.0`**；本卡一次做完，卡内 S0–S6 串行。
-> **进度**：S1 红已提交 `f7c91e2`（`== 196 checks, 5 failed`）；S2 实现已提交 `d3a17ad`
-> （`== 198 checks, 0 failed`）；S0 的语料重取与 S3–S6 未开始。
+> **进度**：S0–S5 已完成（S1a `f7c91e2`、S0+S1b `16c8977`、S2 `d3a17ad`、
+> S3 `2d1a7e5`、S4 `666788a`、S5 `9b84b73`）；S6 收口进行中（0.2.0 文档、打包、
+> 提交与 tag）。
 > **上游依据**：`ct-lang` tag `v1.1.0`（`aa223cf18e3ac143d066330569e537b8899ebbea`），
 > `docs/language-spec.md` §3 / §3.1、§4.65、§4.71、§4.73。
 > **覆盖缺口**：G-1 表达式 match 臂、G-2 `yield`、G-3 可选链、G-4 `box` 硬错、G-5 固有 impl 锁测、
@@ -24,7 +25,7 @@ extension-minor: 2
 | 交付物 | `syntaxes/ct.tmLanguage.json`、`test/fixtures/**`（按 `v1.1.0` 重取 + 新增样例）、`test/surface.json`、`test/check-surface.py`、`check-grammar.py` 断言、README/CHANGELOG、`0.2.0` vsix、`v0.2.0` tag |
 | Stage 清单 | S0 语料与基线、S1 红、S2 match/yield、S3 可选链、S4 `box`、S5 语料与门禁、S6 收口（§2） |
 | 退出判据 | `E-VS-1-01 … E-VS-1-18`（§3） |
-| version-minor | 7 |
+| version-minor | 2 |
 | 已知风险 | `R-VS-1-1 … R-VS-1-6`（§5） |
 
 ## 1 入口与闸
@@ -57,13 +58,13 @@ S2–S4 期间不得修改 S1 已提交的断言（断言变更只能回到 S1 �
 
 | Stage | 状态 | 证据 |
 | --- | --- | --- |
-| S0 语料与基线 | 部分（302 + 两份 B5 错误样例已入 fixtures；`p53_*`、`301`、`303` 未取） | `f7c91e2` |
-| S1 红 | ✅ 已提交 | `f7c91e2`：`== 196 checks, 5 failed`，退出码 1 |
-| S2 match/yield | ✅ 已提交 | `d3a17ad`；当前 `npm test` = 198 检查 / 0 失败 |
-| S3 可选链 | 未开始 | — |
-| S4 `box` 退场 | 未开始 | — |
-| S5 语料 + 防漂移门禁 | 未开始 | — |
-| S6 收口（提交/tag/push） | **不满足**：工作区已有版本号/README/CHANGELOG 改动，但 S3–S5 未完成，且这些文档仍写着「0.9.0 再对齐 box」的旧分卡口径 | 工作区 |
+| S0 语料与基线 | ✅ 已提交 | `16c8977`：54 份 fixtures 按 `v1.1.0` 取回并逐份 diff 一致，`test/fixtures/README.md` 登记 tag/commit/清单/数量 |
+| S1 红 | ✅ 已提交 | S1a `f7c91e2`：`== 196 checks, 5 failed`；S1b `16c8977`：`== 214 checks, 9 failed`（补可选链与 box）；两次均退出码 1 |
+| S2 match/yield | ✅ 已提交 | `d3a17ad`：`ct-match-arm` + `ct-yield`，`== 198 checks, 0 failed` |
+| S3 可选链 | ✅ 已提交 | `2d1a7e5`：`ct-optional-chain`；断言转绿，剩 box 3 条 |
+| S4 `box` 退场 | ✅ 已提交 | `666788a`：`ct-box-type` 收窄 + `ct-box-alias-removed`，snippets 去掉 `box<`；`215 checks, 0 failed` |
+| S5 语料 + 防漂移门禁 | ✅ 已提交 | `9b84b73`：`test/surface.json`（51 条 / 4 组）+ `test/check-surface.py`（110 检查）+ G-5/G-6 锁测；`7fe31b5` 修 `__pycache__` |
+| S6 收口（提交/tag/push） | 进行中 | 0.2.0 四处版本、README/CHANGELOG、打包与 tag 见下 |
 
 ## 3 退出判据（二值）
 
@@ -111,7 +112,7 @@ S2–S4 期间不得修改 S1 已提交的断言（断言变更只能回到 S1 �
 | R-VS-1-6 | **tag 触发发布但凭据未配** → Release 红 | 打 tag 前过「发布凭据」闸；失败只 rerun，不删 tag |
 
 回滚：语法、测试与门禁、文档三笔独立提交，可分别 revert；`v0.2.0` 版本号与 tag 若已推送则不删，
-以新 PATCH（0.7.1）修正。
+以新 PATCH（0.2.1）修正。
 
 ## 6 关联
 
