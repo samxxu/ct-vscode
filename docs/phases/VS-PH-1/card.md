@@ -66,6 +66,20 @@ S2–S4 期间不得修改 S1 已提交的断言（断言变更只能回到 S1 �
 | S5 语料 + 防漂移门禁 | ✅ 已提交 | `9b84b73`：`test/surface.json`（51 条 / 4 组）+ `test/check-surface.py`（110 检查）+ G-5/G-6 锁测；`7fe31b5` 修 `__pycache__` |
 | S6 收口（提交/tag/push） | 进行中 | 0.2.0 四处版本、README/CHANGELOG、打包与 tag 见下 |
 
+### S6 验证记录（0.2.0，提交 `55b900f`）
+
+| 项 | 结果 |
+| --- | --- |
+| `npm test`（CI，真实 npm + Node 20） | ✅ `check-index` 26/0、`check-grammar` 220/0、`check-surface` 51 条 / 110 检查 / 0 failed；run [45903897745](https://github.com/samxxu/ct-vscode/actions/runs/45903897745) |
+| `npm test`（本机） | ✅ 同上；本机 npm CLI 不在 PATH，用等价的 `node --run test` 执行 |
+| `npx vsce package`（CI） | ✅ 产出 `ct-vscode.vsix`（11 文件，81034 B），并上传 artifact |
+| 本机打包 | ✅ `ct-vscode-0.2.0.vsix` 27440 B；与 CI artifact 的文件清单、逐文件大小一致（仅 zip 时间戳不同），sha256 `a1f72e1f…` |
+| 包内容 | ✅ 不含 `test/**`、`docs/**`、`.github/**`、`package-lock.json` |
+| 运行时依赖 | ✅ `package.json` 无 `dependencies`（只有 `devDependencies`） |
+| 真引擎交叉验证 | ✅ Oniguruma（VS Code 的 TextMate 引擎）下 74 条规则全部编译；54 份 fixtures 的 `(line, rule, text)` 命中与 `check-grammar.py` 的 Python 代理逐条一致（一次性验证，不在仓库门禁内） |
+| Marketplace | ✅ gallery API 当前列 `0.0.1`，用户确认 `0.1.0` 已发布；`0.2.0` 未占用 |
+| tag + Release | ⏳ 等待 `VSCE_PAT`：`gh api repos/samxxu/ct-vscode/actions/secrets` 为 `total_count: 0`；按发布闸未打 tag |
+
 ## 3 退出判据（二值）
 
 | ID | 断言 |
