@@ -25,6 +25,7 @@
     { "include": "#ct-yield" },
     { "include": "#ct-adt-construct" },
     { "include": "#ct-slice-type" },
+    { "include": "#ct-optional-chain" },
     { "include": "#ct-try" },
     { "include": "#ct-materialize" },
     { "include": "#ct-path" },
@@ -569,6 +570,10 @@
         "1": { "name": "entity.name.type.slice.ct" },
         "2": { "name": "punctuation.definition.slice.ct" }
       }
+    },
+    "ct-optional-chain": {
+      "match": "\\?(?:\\.(?![0-9])|\\[)",
+      "name": "keyword.operator.optional-chain.ct"
     },
     "ct-try": {
       "match": "(?<=[A-Za-z0-9_\\)\\]])[ \\t]*\\?(?=[ \\t]*(?:;|,|\\)|\\]|\\}))",
