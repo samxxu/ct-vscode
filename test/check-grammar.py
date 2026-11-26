@@ -1050,6 +1050,17 @@ def main():
     check("bare `Box` / `box` identifiers are not ct-box-type",
           "ct-box-type" not in by_line[1], str(by_line[1]))
 
+    print()
+    print("synthetic match arm -- the variant keeps the ADT scopes:")
+    arm_caps = dict(rules)["ct-match-arm"]["captures"]
+    check("`ct-match-arm` scopes `Type` / `Variant` like ct-adt-construct",
+          arm_caps["2"]["name"] == "entity.name.type.adt.ct"
+          and arm_caps["3"]["name"] == "entity.name.function.variant.ct",
+          str(arm_caps))
+    check("`ct-match-arm` scopes both arrow branches (wildcard / variant)",
+          arm_caps["1"]["name"] == arm_caps["5"]["name"]
+          == "keyword.operator.match-arm.ct", str(arm_caps))
+
 
     # v0.26.4 / DOC-68: the go-to-definition scanner lives in ../indexer.js and
     # is asserted by a plain Node script. Node is not a prerequisite of the

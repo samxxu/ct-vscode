@@ -21,6 +21,8 @@
     { "include": "#ct-new" },
     { "include": "#ct-owned-type" },
     { "include": "#ct-adt-match" },
+    { "include": "#ct-match-arm" },
+    { "include": "#ct-yield" },
     { "include": "#ct-adt-construct" },
     { "include": "#ct-slice-type" },
     { "include": "#ct-try" },
@@ -537,6 +539,21 @@
       "match": "\\b(match)\\b[ \\t]*(?=\\()",
       "captures": {
         "1": { "name": "keyword.control.match.ct" }
+      }
+    },
+    "ct-match-arm": {
+      "match": "(?:^|(?<=[{,;}]))[ \\t]*(?:_[ \\t]*(=>)|(?:(?:([A-Z][A-Za-z0-9_]*)[ \\t]*\\.[ \\t]*)?([A-Z][A-Za-z0-9_]*)[ \\t]*\\(([^()]*)\\))[ \\t]*(=>))(?![ \\t]*\\{)",
+      "captures": {
+        "1": { "name": "keyword.operator.match-arm.ct" },
+        "2": { "name": "entity.name.type.adt.ct" },
+        "3": { "name": "entity.name.function.variant.ct" },
+        "5": { "name": "keyword.operator.match-arm.ct" }
+      }
+    },
+    "ct-yield": {
+      "match": "^[ \\t]*(yield)\\b(?=[ \\t]*[^ \\t=;,.\\[\\]\\)}])",
+      "captures": {
+        "1": { "name": "keyword.control.yield.ct" }
       }
     },
     "ct-adt-construct": {
