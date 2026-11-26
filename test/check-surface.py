@@ -23,6 +23,10 @@ import os
 import re
 import sys
 
+# Loading check-grammar.py as a module must not leave a __pycache__ behind in
+# the repository (the gate runs on every `npm test`).
+sys.dont_write_bytecode = True
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 MANIFEST = os.path.join(HERE, "surface.json")
 FIXTURES = os.path.join(HERE, "fixtures")
