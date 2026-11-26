@@ -77,7 +77,7 @@ S2–S4 期间不得修改 S1 已提交的断言（断言变更只能回到 S1 �
 | 运行时依赖 | ✅ `npm ls --omit=dev` → `(empty)`（真实 npm 10.9.11）；`package.json` 无 `dependencies` |
 | 语言显示名 | ✅ 扩展 `displayName` 与 `aliases[0]` 均为 **Ct**；vsixmanifest `DisplayName` = `Ct — C with Traits`，编辑器语言显示名随 `aliases[0]` 变成 Ct（`CT` / `ct` 仍是别名） |
 | 真引擎交叉验证 | ✅ Oniguruma（VS Code 的 TextMate 引擎）下 74 条规则全部编译；54 份 fixtures 的 `(line, rule, text)` 命中与 `check-grammar.py` 的 Python 代理逐条一致（一次性验证，不在仓库门禁内） |
-| Marketplace | ✅ 0.2.0 已发布并可下载：`/publishers/samxxu/vsextensions/ct-vscode/0.2.0/vspackage` HTTP 200，manifest `Identity Version="0.2.0"`、`DisplayName = Ct — C with Traits`、`aliases[0] = Ct`。gallery 列表查询可能仍缓存旧版本（查询返回 `0.0.1`），属索引延迟 |
+| Marketplace | ✅ 0.2.0 已发布并可下载：`/publishers/samxxu/vsextensions/ct-vscode/0.2.0/vspackage` HTTP 200，manifest `Identity Version="0.2.0"`、`DisplayName = Ct — C with Traits`、`aliases[0] = Ct`。索引生效后 gallery 查询返回 `displayName: Ct — C with Traits`、`versions: ["0.2.0"]` |
 | 发布链路 | ✅ `release.yml`：`permissions {contents: read, id-token: write}` + `npx @vscode/vsce publish --oidc --packagePath ct-vscode.vsix`；`verify-pat.yml` 已删除；排除 `docs/` 后 `grep -rn "VSCE_PAT"` 为空 |
 | tag + Release | ✅ annotated tag `v0.2.0` 已推送；Release run [45909160446](https://github.com/samxxu/ct-vscode/actions/runs/45909160446) **success**，发布步日志 `Published samxxu.ct-vscode v0.2.0.`；发布物可从 gallery 按版本下载（见 Marketplace 行） |
 
