@@ -1,5 +1,7 @@
 # Ct — C with Traits for VS Code
 
+<p align="center"><img src="https://raw.githubusercontent.com/samxxu/ct-vscode/main/icon.png" width="96" height="96" alt="Ct logo"></p>
+
 [![CI](https://github.com/samxxu/ct-vscode/actions/workflows/ci.yml/badge.svg)](https://github.com/samxxu/ct-vscode/actions/workflows/ci.yml)
 
 Syntax highlighting, snippets, go-to-definition and language configuration for

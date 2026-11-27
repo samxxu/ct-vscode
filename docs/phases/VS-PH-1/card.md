@@ -8,6 +8,8 @@ extension-minor: 2
 > **状态：已完成**（0.2.0 已于 2026-11-27 发布到 Marketplace）。
 > **进度**：S0–S6 全部完成——S6b 的 CI 切 OIDC、annotated tag `v0.2.0`、push 与 Release
 > 均已完成（`88523ee` + tag + run `45909160446`，见 §2 台账与 §2.1 证据）。
+> **收口后补充**：Ct logo（`icon.png`）已入库并写入 README，`package.json` 的 `icon` 字段
+> 与 Marketplace 显示随**下一版本**落地（E-VS-1-20 待满足）。
 > **上游依据**：`ct-lang` tag `v1.1.0`（`aa223cf18e3ac143d066330569e537b8899ebbea`），
 > `docs/language-spec.md` §3 / §3.1、§4.65、§4.71、§4.73。
 > **覆盖缺口**：G-1 表达式 match 臂、G-2 `yield`、G-3 可选链、G-4 `box` 硬错、G-5 固有 impl 锁测、
@@ -23,7 +25,7 @@ extension-minor: 2
 | 非目标 | 304–307 模式与 §4.77 函子糖（1.2，未发布）；语义校验（`yield` 唯一出口、`box` 硬错判定由编译器负责）；`indexer.js` / `extension.js` 功能；发布渠道与账号迁移 |
 | 交付物 | `syntaxes/ct.tmLanguage.json`、`test/fixtures/**`（按 `v1.1.0` 重取 + 新增样例）、`test/surface.json`、`test/check-surface.py`、`check-grammar.py` 断言、README/CHANGELOG、`0.2.0` vsix、`v0.2.0` tag |
 | Stage 清单 | S0 语料与基线、S1 红、S2 match/yield、S3 可选链、S4 `box`、S5 语料与门禁、S6 收口（§2） |
-| 退出判据 | `E-VS-1-01 … E-VS-1-19`（§3） |
+| 退出判据 | `E-VS-1-01 … E-VS-1-20`（§3） |
 | version-minor | 2 |
 | 已知风险 | `R-VS-1-1 … R-VS-1-6`（§5） |
 
@@ -36,6 +38,7 @@ extension-minor: 2
 | 规范歧义 | 行式语法无法判定「`yield` 是否在 match 臂块内」，采用**行首近似**并登记（R-VS-1-1） | 已裁定 |
 | **版本口径** | Marketplace 已发布 **0.1.0**（用户确认；gallery API 目前仍只列 0.0.1），**0.1.0 不可复用**，本卡目标改为 **0.2.0**；`0.6.x` 是拆分前的扩展线，从未上架。四处置数：`package.json` → `package-lock.json` 根 `version` → README → CHANGELOG | 已裁定（2026-11-27） |
 | **发布凭据** | **裁定：走 Trusted Publishing（GitHub OIDC），不使用 `VSCE_PAT`**。Azure DevOps 全局 PAT 于 **2026-12-01 退役**，PAT 路线作废。策略字段：Repository owner `samxxu`、Repository `ct-vscode`、Workflow `release.yml`、Environment 留空 | ✅ 已切 `--oidc`；Release 成功（run `45909160446`，log：`Published samxxu.ct-vscode v0.2.0.`）；仓内 `VSCE_PAT` secret 已删除（secrets `total_count: 0`） |
+| **品牌资产** | 用户提供的 Ct logo（128×128 PNG，带 alpha：深色圆角块 + 白 `C` + 绿 `t`）已落到仓库根 `icon.png`，README 顶部已引用。`package.json` 还需加 `"icon": "icon.png"`，vsce 才会把它写进 vsixmanifest 并显示在 Marketplace | 资产已就位（2026-11-27）；`package.json` 字段待加 |
 | 红线 | 已推的 tag 不删、不强推、不改写历史；发布步骤失败只允许修凭据后 `gh run rerun` | 长期有效 |
 
 ## 2 Stage
@@ -48,7 +51,7 @@ extension-minor: 2
 | S3 | 可选链 `?.` / `?[` | `ct-optional-chain`（`\?\.(?![0-9])` 与 `\?\[`），排在 `ct-try` 之前 | E-VS-1-06…08 转绿 | M |
 | S4 | `box<T>` 退场 | `ct-box-type` 收窄为 `\bBox\b`；新增 `ct-box-alias-removed` → `invalid.deprecated.ct`；snippets 正文核对不含 `box<` | E-VS-1-09…10 转绿 | S |
 | S5 | 语料与防漂移门禁 | `test/surface.json`（四组构造清单）+ `test/check-surface.py`（复用 `check-grammar` 的 `resolve/scan`）；`npm test` 串联三脚本；G-5/G-6 锁测 | E-VS-1-11…14、17…18；门禁演练按 E-VS-1-13 | M |
-| S6 | 收口 | **S6a（已完成）**：README 目标 1.1.0、`.vscodeignore` 加 `docs/**`、CHANGELOG `0.2.0`、`package.json` 0.2.0 与 lock、打包、证据表。**S6b（待办）**：CI 切 OIDC（§6 清单 1–3）→ 提交 → annotated tag `v0.2.0` → push main+tag | E-VS-1-15…16、19；Actions 记录贴入 | M |
+| S6 | 收口 | **已完成**：S6a（README/`.vscodeignore`/CHANGELOG/lock/打包/证据）+ S6b（CI 切 OIDC、annotated tag `v0.2.0`、push、Release 成功）。**收口后补充**：`package.json` 加 `"icon": "icon.png"` 属下一版本事项（0.2.0 已发布，图标未能进入该版包） | E-VS-1-15…16、19 满足；E-VS-1-20 见 §3 注 | M |
 
 **Stage 顺序约束**：S0 → S1（必须真红）→ S2/S3/S4（可自选顺序，各自转绿）→ S5 → S6。
 S2–S4 期间不得修改 S1 已提交的断言（断言变更只能回到 S1 重做并重新贴红）。
@@ -104,8 +107,11 @@ S2–S4 期间不得修改 S1 已提交的断言（断言变更只能回到 S1 �
 | E-VS-1-17 | **G-5 锁测**：`impl Cell {` 头部类型名有 `entity.name.type` scope；`impl Greeter for Person {` 仍命中 `ct-impl` |
 | E-VS-1-18 | **多级链不误判**：`doc["user"]["age"]`、`x[k].field` 不命中 `ct-generic-type` / `ct-generic-call` |
 | E-VS-1-19 | **OIDC 发布闭环**：`release.yml` 使用 `permissions: id-token: write` + `npx @vscode/vsce publish --oidc`，仓内无 `VSCE_PAT` secret 也能发布成功；`verify-pat.yml` 与 README 中的 `VSCE_PAT` 说明已删除；`@vscode/vsce` ≥ 4、两个工作流 Node 22、lock 已重生成 |
+| E-VS-1-20 | **扩展图标**：`icon.png` 为 128×128 PNG（带 alpha）；`package.json` 含 `"icon": "icon.png"`；打包清单含 `icon.png` 且 `extension.vsixmanifest` 的 `Icon` 指向它；Marketplace 条目显示该图标；README 顶部引用同一文件；CHANGELOG `0.2.0` 有一条图标记录 |
 
-> **判据状态**：E-VS-1-01…19 全部满足；E-VS-1-16（tag/Release/版本一致）与 E-VS-1-19（OIDC 闭环）的证据见 §2.1。
+> **判据状态**：E-VS-1-01…19 全部满足（E-VS-1-16、19 的证据见 §2.1）。
+> **E-VS-1-20（扩展图标）未满足**：`icon.png` 已入库、README 已引用，但 0.2.0 的包在图标加入前就已打包发布，
+> `package.json` 的 `icon` 字段也未加；图标只能随**下一版本**（版本号待负责人裁定）进入 Marketplace。
 
 ## 4 收口流程（S6b 固定动作，按序执行）
 
@@ -136,18 +142,20 @@ S2–S4 期间不得修改 S1 已提交的断言（断言变更只能回到 S1 �
 回滚：语法、测试与门禁、文档三笔独立提交，可分别 revert；`v0.2.0` 版本号与 tag 若已推送则不删，
 以新 PATCH（0.2.1）修正。
 
-## 6 执笔人交接清单（S6b，✅ 已完成）
+## 6 执笔人交接清单
 
 > 主张人（需求/规划）已把决策、口径与判据全部落入本卡；以下由执笔人执行，完成后回填 §2 进度台账与 §2.1 证据表。
-> **执行记录**：`88523ee`（release.yml 切 OIDC、vsce 4.1.1、Node 22、lock 重生成、删 verify-pat.yml、README/CHANGELOG）→ tag `v0.2.0` → Release `45909160446` 成功；本清单 1–5 全部完成。
+> **执行记录**：`88523ee`（release.yml 切 OIDC、vsce 4.1.1、Node 22、lock 重生成、删 verify-pat.yml、README/CHANGELOG）
+> → tag `v0.2.0` → Release `45909160446` 成功。**清单 1–4 已完成；5–6 待办。**
 
-| # | 工作 | 落点文件 | 完成判据 |
-| --- | --- | --- | --- |
-| 1 | 发布步切 OIDC | `.github/workflows/release.yml` | 工作流级 `permissions: { contents: read, id-token: write }`；发布步 `npx @vscode/vsce publish --oidc --packagePath ct-vscode.vsix`；不再引用 `secrets.VSCE_PAT` |
-| 2 | 升 vsce 与 Node | `package.json`、`package-lock.json`、`.github/workflows/ci.yml`、`.github/workflows/release.yml` | `@vscode/vsce: ^4`；两个工作流 `node-version: 22`；`npm ci` 后用 `--package-lock-only` 重生成的 lock；CI 全绿（E-VS-1-14） |
-| 3 | 清 PAT 残留 | `.github/workflows/verify-pat.yml`、`README.md` | 删除 `verify-pat.yml`；README 三处 `VSCE_PAT` 说明改为 OIDC；`grep -rn "VSCE_PAT" .`（排除 `docs/`）为空 |
-| 4 | 收口动作 | git | 提交 → annotated tag `v0.2.0` → push `main` + tag；`CI` 与 `Release` 双绿，run 链接与 Marketplace 0.2.0 可见性回填 §2.1 |
-| 5 | 回填证据 | 本卡 §2.1、`CHANGELOG.md`（如需） | E-VS-1-16、E-VS-1-19 标 ✅ 并附链接；`v0.2.0` 不与 0.1.0 冲突 |
+| # | 工作 | 落点文件 | 完成判据 | 状态 |
+| --- | --- | --- | --- | --- |
+| 1 | 发布步切 OIDC | `.github/workflows/release.yml` | 工作流级 `permissions: { contents: read, id-token: write }`；发布步 `npx @vscode/vsce publish --oidc --packagePath ct-vscode.vsix`；不再引用 `secrets.VSCE_PAT` | ✅ `88523ee` |
+| 2 | 升 vsce 与 Node | `package.json`、`package-lock.json`、`.github/workflows/ci.yml`、`.github/workflows/release.yml` | `@vscode/vsce: ^4`；两个工作流 `node-version: 22`；lock 已重生成；CI 全绿（E-VS-1-14） | ✅ `88523ee` |
+| 3 | 清 PAT 残留 | `.github/workflows/verify-pat.yml`、`README.md` | 删除 `verify-pat.yml`；README 三处 `VSCE_PAT` 说明改为 OIDC；`grep -rn "VSCE_PAT" .`（排除 `docs/`）为空 | ✅ `88523ee` |
+| 4 | 收口动作 | git | 提交 → annotated tag `v0.2.0` → push `main` + tag；`CI` 与 `Release` 双绿，run 链接与 Marketplace 0.2.0 可见性回填 §2.1 | ✅ tag + Release `45909160446` |
+| 5 | 扩展图标 | `package.json`、`CHANGELOG.md`、打包 | `"icon": "icon.png"`；vsix 清单含 `icon.png` 且 manifest `Icon` 指向它；CHANGELOG 记一条；重打包并把新大小/清单回填 §2.1（约 +11 KB） | ⏳ 随下一版本 |
+| 6 | 回填证据 | 本卡 §2.1、`CHANGELOG.md`（如需） | E-VS-1-20 标 ✅ 并附 Marketplace 链接；下一版本号由负责人裁定 | ⏳ |
 
 **边界与禁令**
 
